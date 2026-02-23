@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Monólito — Orbs Dock Patch</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&amp;family=Orbitron:wght@500;700&amp;family=JetBrains+Mono&amp;display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050812;
+  --surface:rgba(15,23,42,0.7);
+  --surface-bright:rgba(30,41,59,0.8);
+  --secondary:#00f2ff;
+  --mut:#94a3b8;
+  --bd:1px solid rgba(255,255,255,0.08);
+  --r:16px;
+  --tabsH:80px;
+  --shadow:0 20px 50px rgba(0,0,0,0.7);
+}
+
+/* Base UI (trimmed for clarity) */
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,sans-serif;color:#f1f5f9;background:var(--bg);overflow:hidden}
+body{background:radial-gradient(circle at top right,#0c1e35,#050812)}
+#app-container{height:100%;display:flex;flex-direction:column}
+#viewport{flex:1;overflow-y:auto;padding:20px;padding-bottom:120px}
+.view{animation:fadeIn .4s ease-out}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* Frame-shell sessions (from oiFSm) */
+.session{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:var(--bd);border-radius:12px;margin-bottom:14px;overflow:hidden;display:flex;flex-direction:column;transition:all .28s cubic-bezier(.2,.9,.3,1)}
+.session.min{height:56px;opacity:.98;transform:translateY(0);pointer-events:auto}
+.session .hdr{display:flex;align-items:center;padding:10px 12px;gap:12px;background:rgba(0,0,0,0.25)}
+.session .hdr .title{font-weight:700;font-size:13px}
+.session .hdr .tools{margin-left:auto;display:flex;gap:8px}
+.btn{background:rgba(255,255,255,0.03);border:0;color:var(--mut);padding:6px 8px;border-radius:8px;cursor:pointer}
+.frame-shell{position:relative}
+.frame-shell iframe.frame-content{width:100%;height:360px;border:0;display:block;border-radius:8px}
+.frame-resize{position:absolute;left:0;right:0;height:8px;bottom:0;cursor:ns-resize;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.02),transparent)}
+/* when minimized, hide iframe visually but keep accessible if needed */
+.session.min .frame-shell iframe.frame-content{height:0;opacity:0;pointer-events:none;transition:height .2s,opacity .2s}
+
+/* Dock base */
+#dock{
+  position:fixed;
+  bottom:95px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  gap:12px;
+  padding:10px;
+  border-radius:48px;
+  background:rgba(15,23,42,0.85);
+  border:var(--bd);
+  box-shadow:var(--shadow);
+  z-index:2500;
+  transition:transform .28s,opacity .28s;
+}
+#dock:empty{opacity:0;transform:translate(-50%,20px);pointer-events:none}
+
+/* ============================
+   ORBS / Minimized visuals
+   ============================ */
+.dock-orb{
+  position:relative;
+  width:56px;height:56px;border-radius:50%;cursor:pointer;display:grid;place-items:center;
+  transform:translateY(0);
+}
+.orb-core{
+  width:100%;height:100%;border-radius:50%;display:grid;place-items:center;font-size:20px;color:#000;
+  background:radial-gradient(circle at 28% 28%, #00f2ff, #0066ff 60%);
+  box-shadow:0 6px 24px rgba(0,242,255,0.08),0 0 18px rgba(0,242,255,0.06) inset;
+  z-index:2;position:relative;transition:transform .18s cubic-bezier(.2,.9,.3,1);
+  animation:orbPulse 3000ms ease-in-out infinite;
+}
+.orb-glow{
+  position:absolute;inset:-8px;border-radius:50%;z-index:1;filter:blur(10px);
+  background:radial-gradient(circle,#00f2ff88,transparent 45%);
+  opacity:.75;transition:opacity .18s;
+  animation:orbGlow 3000ms ease-in-out infinite;
+}
+.dock-orb:hover .orb-core{transform:scale(1.12)}
+.dock-orb:hover .orb-glow{opacity:1}
+
+/* small label when many minimized */
+.dock-cluster{
+  width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#004dff,#00f2ff);color:#000;font-weight:800;
+  box-shadow:0 8px 30px rgba(0,0,0,0.45);
+}
+.cluster-count{font-size:13px}
+
+/* Animations */
+@keyframes orbPulse{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.07)}
+  100%{transform:scale(1)}
+}
+@keyframes orbGlow{
+  0%{opacity:.6}
+  50%{opacity:1}
+  100%{opacity:.6}
+}
+
+/* small badge under orb with title (optional) */
+.orb-badge{
+  position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);padding:4px 8px;border-radius:8px;font-size:11px;color:#e6f7ff;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s,transform .12s;
+}
+.dock-orb:hover .orb-badge{opacity:1;transform:translateX(-50%) translateY(-4px)}
+
+/* responsive shrink */
+@media (max-width:520px){
+  .dock-orb{width:44px;height:44px}
+  .orb-core{font-size:16px}
+}
+</style>
+</head>
+<body>
+<button id="add" style="position:fixed;right:16px;top:16px;z-index:4000;padding:8px 10px;border-radius:10px;border:0;background:#0066ff;color:#fff;cursor:pointer">➕ Abrir App</button>
+
+<div id="app-container">
+  <div id="viewport">
+    <section id="view-home" class="view">
+      <header class="vision-header">
+        <div class="vision-brand" style="font-family:Orbitron,system-ui;font-weight:700">MONOLITH <span style="font-weight:400;color:var(--secondary)">DUAL V5</span></div>
+      </header>
+      <div class="apps-grid" id="apps-container"></div>
+    </section>
+
+    <section id="view-stack" class="view" style="display:none">
+      <header class="vision-header"><div class="vision-brand">PROCESS<span style="color:var(--secondary)">STACK</span></div></header>
+      <div id="stackWrap" style="padding-top:10px"></div>
+    </section>
+  </div>
+
+  <div id="dock"></div>
+</div>
+
+<script>
+/* ============================
+   Adapted / patched JS (based on your oiFSm.js)
+   - openApp creates DOM .session elements
+   - minimize toggles .min class
+   - updateDock renders ORBS with nice animation + cluster handling
+   - restore on click
+   ============================ */
+
+const APPS = [
+  { key:'serena', title:'Serena · Ampara', desc:'Acolhimento e suporte emocional.', url:'https://example.com', icon:'fa-leaf' },
+  { key:'solus', title:'Solus · Arcana', desc:'Harmonização energética e meditação.', url:'https://example.com', icon:'fa-gem' },
+  { key:'atlas', title:'Atlas · Cartesius', desc:'Planejador estratégico.', url:'https://example.com', icon:'fa-satellite' },
+  { key:'lumine', title:'Lumine · Brilhare', desc:'Inspiração leve e atividades.', url:'https://example.com', icon:'fa-bolt' }
+];
+
+function makeAppCard(a){
+  const el = document.createElement('div'); el.className='app-item';
+  el.innerHTML = `<i class="fa-solid ${a.icon}"></i><span style="display:block;margin-top:6px">${a.title}</span>`;
+  el.onclick = ()=> openApp(a);
+  return el;
+}
+const appsWrap = document.getElementById('apps-container');
+APPS.forEach(a=> appsWrap.appendChild(makeAppCard(a)));
+
+function openApp(a){
+  const sid = 's_' + Math.random().toString(36).slice(2);
+  const card = document.createElement('div'); card.className='session'; card.dataset.sid = sid;
+  card.dataset.meta = JSON.stringify({title:a.title||'App',url:a.url||''});
+
+  // header
+  const hdr = document.createElement('div'); hdr.className='hdr';
+  const title = document.createElement('div'); title.className='title'; title.textContent = a.title || 'App';
+  const tools = document.createElement('div'); tools.className='tools';
+  const btnMin = document.createElement('button'); btnMin.className='btn'; btnMin.dataset.act='min'; btnMin.title='Minimizar'; btnMin.innerHTML='−';
+  const btnRef = document.createElement('button'); btnRef.className='btn'; btnRef.dataset.act='ref'; btnRef.title='Recarregar'; btnRef.innerHTML='⟳';
+  const btnClose = document.createElement('button'); btnClose.className='btn'; btnClose.dataset.act='close'; btnClose.title='Fechar'; btnClose.innerHTML='×';
+  tools.appendChild(btnMin); tools.appendChild(btnRef); tools.appendChild(btnClose);
+  hdr.appendChild(title); hdr.appendChild(tools);
+
+  // frame
+  const frameShell = document.createElement('div'); frameShell.className='frame-shell';
+  const iframe = document.createElement('iframe'); iframe.className='frame-content'; iframe.src = a.url || 'about:blank';
+  iframe.setAttribute('allow','autoplay; clipboard-read; clipboard-write; picture-in-picture; fullscreen');
+  const resizeHandle = document.createElement('div'); resizeHandle.className='frame-resize';
+  frameShell.appendChild(iframe); frameShell.appendChild(resizeHandle);
+
+  card.appendChild(hdr); card.appendChild(frameShell);
+
+  // prepend to stackWrap and show stack view
+  const stackWrap = document.getElementById('stackWrap');
+  stackWrap.prepend(card);
+  document.querySelectorAll('.view').forEach(v=>v.style.display='none');
+  document.getElementById('view-stack').style.display='block';
+
+  // bind actions
+  btnMin.onclick = (ev)=>{
+    ev.stopPropagation();
+    card.classList.toggle('min');
+    updateDock();
+  };
+  btnRef.onclick = (ev)=>{ ev.stopPropagation(); try{ iframe.contentWindow.location.reload(); }catch(e){ iframe.src = iframe.src; } };
+  btnClose.onclick = (ev)=>{ ev.stopPropagation(); card.remove(); updateDock(); };
+
+  // bind simple resize (mouse)
+  bindSimpleResize(card);
+  // initial update
+  updateDock();
+}
+
+/* simple vertical resize for demo (mouse events) */
+function bindSimpleResize(card){
+  const handle = card.querySelector('.frame-resize');
+  const iframe = card.querySelector('.frame-content');
+  if(!handle || !iframe) return;
+  let dragging=false, startY=0, startH=0;
+  handle.onmousedown = (e)=>{ dragging=true; startY=e.clientY; startH=iframe.offsetHeight; document.body.style.cursor='ns-resize'; e.preventDefault(); };
+  window.addEventListener('mousemove', (e)=>{ if(!dragging) return; const dy = e.clientY - startY; iframe.style.height = Math.max(120, startH + dy) + 'px'; });
+  window.addEventListener('mouseup', ()=>{ if(dragging){ dragging=false; document.body.style.cursor='default'; }});
+}
+
+/* updateDock: builds orbs for each minimized session.
+   - If more than 6 minimized, shows a cluster orb with count.
+*/
+function updateDock(){
+  const dock = document.getElementById('dock');
+  dock.innerHTML = '';
+  const sessions = Array.from(document.querySelectorAll('.session'));
+  const minimized = sessions.filter(s=>s.classList.contains('min'));
+
+  if(minimized.length === 0) { return; }
+
+  const MAX_VISIBLE = 6;
+  const toShow = minimized.slice(0, MAX_VISIBLE);
+
+  toShow.forEach(s=>{
+    const meta = JSON.parse(s.dataset.meta || '{}');
+    const orb = document.createElement('div'); orb.className='dock-orb'; orb.dataset.sid = s.dataset.sid;
+    orb.innerHTML = `
+      <div class="orb-core"><i class="fa-solid ${guessIcon(meta.url) || 'fa-circle-info'}"></i></div>
+      <div class="orb-glow"></div>
+      <div class="orb-badge">${escapeHtml(meta.title || 'App')}</div>
+    `;
+    orb.onclick = (ev)=>{ ev.stopPropagation(); restoreSession(s); };
+    orb.oncontextmenu = (ev)=>{ ev.preventDefault(); // right-click quick actions
+        // quick menu: restore / close
+        const menu = document.createElement('div'); menu.style.position='fixed'; menu.style.left=ev.clientX+'px'; menu.style.top=ev.clientY+'px';
+        menu.style.background='rgba(0,0,0,0.9)'; menu.style.color='#fff'; menu.style.padding='8px'; menu.style.borderRadius='8px';
+        menu.style.zIndex=99999; menu.innerHTML = `<div style="padding:6px 8px;cursor:pointer" id="m-restore">Restaurar</div><div style="padding:6px 8px;cursor:pointer" id="m-close">Fechar</div>`;
+        document.body.appendChild(menu);
+        menu.querySelector('#m-restore').onclick = ()=>{ restoreSession(s); menu.remove(); };
+        menu.querySelector('#m-close').onclick = ()=>{ s.remove(); updateDock(); menu.remove(); };
+        window.addEventListener('click', ()=> menu.remove(), { once: true });
+    };
+    dock.appendChild(orb);
+  });
+
+  if(minimized.length > MAX_VISIBLE){
+    const cluster = document.createElement('div'); cluster.className='dock-cluster';
+    cluster.innerHTML = `<div class="cluster-count">+${minimized.length - MAX_VISIBLE}</div>`;
+    cluster.title = `${minimized.length} sessões minimizadas`;
+    cluster.onclick = ()=>{ // open stack view and briefly highlight minimized sessions
+      document.querySelectorAll('.view').forEach(v=>v.style.display='none');
+      document.getElementById('view-stack').style.display='block';
+      minimized.forEach((s,i)=>{ s.style.transition='transform .18s'; s.style.transform='translateX(6px)'; setTimeout(()=>s.style.transform='translateX(0)', 220 + (i*30)); });
+    };
+    dock.appendChild(cluster);
+  }
+}
+
+/* restore helper */
+function restoreSession(sessionEl){
+  sessionEl.classList.remove('min');
+  // scroll into view and add a small pulse
+  sessionEl.scrollIntoView({behavior:'smooth',block:'center'});
+  sessionEl.style.transition='box-shadow .28s,transform .28s';
+  sessionEl.style.boxShadow='0 10px 40px rgba(0,122,255,0.12)';
+  setTimeout(()=>{ sessionEl.style.boxShadow=''; }, 900);
+  updateDock();
+}
+
+/* small utility to pick an icon based on url or meta (best-effort) */
+function guessIcon(url){
+  if(!url) return 'fa-circle-info';
+  if(url.includes('example')) return 'fa-flask';
+  if(url.includes('wikipedia')) return 'fa-book';
+  if(url.includes('google')) return 'fa-bolt';
+  if(url.includes('duckduckgo')) return 'fa-satellite';
+  return 'fa-rocket';
+}
+function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* wire up add button + sample open on load */
+document.getElementById('add').addEventListener('click', ()=> {
+  const idx = Math.floor(Math.random()*APPS.length);
+  openApp(APPS[idx]);
+});
+
+/* expose openApp for console */
+window.openApp = openApp;
+
+/* initial: create one demo app */
+openApp(APPS[0]);
+</script>
+</body>
+</html>

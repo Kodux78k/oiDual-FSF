@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+    <title>KOBLLUX ∆³ · Monólito V6</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-main: radial-gradient(circle at top, #181c3a 0%, #050816 40%, #010208 100%);
+            --surface: rgba(15, 23, 42, 0.7);
+            --card-bg: rgba(10, 15, 32, 0.82);
+            --border-soft: rgba(151, 177, 255, 0.25);
+            --secondary: #4fd4ff;
+            --accent-orange: #ff9a3c;
+            --success: #10b981;
+            --text-main: #f7f8ff;
+            --r: 22px;
+            --blur: blur(16px) saturate(180%);
+            --z-system: 5000;
+            --nav-h: 80px;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; margin: 0; padding: 0; }
+        
+        body { 
+            height: 100vh; width: 100vw;
+            font-family: 'Inter', sans-serif; 
+            color: var(--text-main); 
+            background: var(--bg-main);
+            overflow: hidden;
+            user-select: none;
+            touch-action: none; /* Evita scroll indesejado no drag */
+        }
+
+        #app-container { height: 100%; display: flex; flex-direction: column; position: relative; }
+        #viewport { flex: 1; overflow-y: auto; padding: 20px; scroll-behavior: smooth; padding-bottom: 180px; transition: padding 0.3s; touch-action: pan-y; }
+
+        .view { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .hidden { display: none !important; }
+
+        /* HEADER */
+        header.vision-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-bottom: 20px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .vision-brand { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 1.1rem; letter-spacing: 2px; }
+        .vision-brand span { color: var(--secondary); font-size: 0.7rem; margin-left: 6px; }
+
+        /* ARQUÉTIPOS GRID */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .card {
+            background: var(--card-bg); border-radius: var(--r); padding: 20px;
+            border: 1px solid var(--border-soft); position: relative; overflow: hidden;
+            transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 12px;
+        }
+        .add-app-btn {
+            background: rgba(79, 212, 255, 0.05); border: 1px dashed var(--secondary);
+            border-radius: var(--r); padding: 20px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; cursor: pointer; min-height: 140px;
+        }
+
+        /* THE ORB */
+        .orb {
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.8) 0%, var(--c) 45%, rgba(0,0,0,0.9) 100%);
+            border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 0 25px var(--c); color: #000;
+        }
+        .card .orb { width: 70px; height: 70px; font-size: 1.2rem; }
+        .ascii { font-family: 'JetBrains Mono', monospace; font-weight: 800; }
+
+        /* WINDOWS */
+        .session-window {
+            background: #000; border: 1px solid var(--border-soft); border-radius: 16px;
+            margin-bottom: 15px; overflow: hidden; display: flex; flex-direction: column;
+        }
+        .win-hdr { padding: 12px 18px; background: rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .win-content { height: 320px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #0a0f20, #000); }
+
+        /* DOCK (Sortable/Draggable) */
+        #dock {
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 12px; padding: 12px 18px; border-radius: 40px;
+            background: rgba(10, 15, 32, 0.85); backdrop-filter: blur(25px);
+            border: 1px solid rgba(255,255,255,0.1); z-index: 4000;
+            transition: bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            min-width: 60px; height: 70px; align-items: center;
+        }
+        #dock:empty { opacity: 0; pointer-events: none; }
+        
+        .dock-orb-wrapper {
+            position: relative; cursor: grab; touch-action: none;
+            transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+        }
+        .dock-orb-wrapper.dragging { opacity: 0.5; z-index: 10; transform: scale(1.15); cursor: grabbing; }
+        .dock-orb-wrapper .orb { width: 44px; height: 44px; font-size: 0.7rem; pointer-events: none; }
+        
+        /* NAV WRAPPER RETRÁTIL */
+        .nav-wrapper {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: var(--z-system);
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .nav-wrapper.retracted { transform: translateY(var(--nav-h)); }
+        
+        .nav-bar {
+            height: var(--nav-h); background: rgba(5, 8, 15, 0.98); backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255,255,255,0.12); display: flex; justify-content: space-around; align-items: center;
+            padding-bottom: 10px;
+        }
+        
+        /* GATILHO DA BARRA */
+        .nav-handle {
+            position: absolute; top: -28px; left: 50%; transform: translateX(-50%);
+            width: 50px; height: 28px; background: rgba(5, 8, 15, 0.98);
+            border: 1px solid rgba(255,255,255,0.12); border-bottom: 0;
+            border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: var(--secondary);
+        }
+
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #64748b; font-size: 9px; font-weight: 700; width: 60px; }
+        .nav-item.active { color: var(--secondary); }
+
+        /* FLOATING VAULT */
+        .floating-orb {
+            position: fixed; bottom: 100px; right: 20px; width: 56px; height: 56px;
+            border-radius: 50%; background: radial-gradient(circle at 30% 20%, #ff9a3c, #8a2be2);
+            box-shadow: 0 0 20px rgba(255, 154, 60, 0.3);
+            display: grid; place-items: center; cursor: pointer; z-index: 4001;
+            transition: bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #terminal { font-family: 'JetBrains Mono'; font-size: 11px; color: var(--success); padding: 15px; height: 100%; overflow-y: auto; background: rgba(0,0,0,0.4); border-radius: 12px; }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <div id="viewport">
+            
+            <!-- HOME -->
+            <section id="view-home" class="view">
+                <header class="vision-header">
+                    <div class="vision-brand">KOBLLUX<span>∆³</span></div>
+                    <div style="font-size: 10px; color: var(--secondary);"><i data-lucide="shield"></i> V6.1.1</div>
+                </header>
+
+                <div class="grid" id="archetypes-grid">
+                    <!-- Cards via JS -->
+                    <div class="add-app-btn" onclick="log('Catálogo de extensões em nuvem...')">
+                        <i data-lucide="plus" style="color:var(--secondary); margin-bottom:8px"></i>
+                        <span style="font-size: 12px; font-weight: 800; color:var(--secondary)">ADD APP</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STACK -->
+            <section id="view-stack" class="view hidden">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
+                    <h2 style="font-family:'Orbitron'; font-size:14px">PROCESSOS ATIVOS</h2>
+                    <button onclick="switchView('home', document.querySelector('.nav-item'))" style="background:var(--secondary); border:0; color:#000; padding:6px 14px; border-radius:20px; font-size:10px; font-weight:800;">+ ADD APP</button>
+                </div>
+                <div id="stack-container"></div>
+            </section>
+
+            <!-- LOGS -->
+            <section id="view-logs" class="view hidden" style="height: 60vh">
+                <div id="terminal"></div>
+            </section>
+
+        </div>
+
+        <!-- DOCK DINÂMICO -->
+        <div id="dock"></div>
+
+        <!-- COFRE -->
+        <div id="float-orb" class="floating-orb" onclick="log('Acessando cofre...')">
+            <i data-lucide="lock" style="color:#000; width:20px"></i>
+        </div>
+
+        <!-- NAV RETRÁTIL -->
+        <div class="nav-wrapper" id="nav-wrapper">
+            <div class="nav-handle" onclick="toggleNav()">
+                <i data-lucide="chevron-down" id="nav-arrow"></i>
+            </div>
+            <nav class="nav-bar">
+                <div class="nav-item active" onclick="switchView('home', this)"><i data-lucide="home"></i><span>HOME</span></div>
+                <div class="nav-item" onclick="switchView('stack', this)"><i data-lucide="layers"></i><span>STACK</span></div>
+                <div class="nav-item" onclick="switchView('logs', this)"><i data-lucide="terminal"></i><span>LOGS</span></div>
+                <div class="nav-item" onclick="switchView('home', this)"><i data-lucide="plus-square"></i><span>APPS</span></div>
+            </nav>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const ARQUETIPOS = [
+            { id: 'atlas', name: 'ATLAS', color: '#7ef9c4', ascii: 'A+' },
+            { id: 'nova', name: 'NOVA', color: '#ffe986', ascii: 'N*' },
+            { id: 'pulse', name: 'PULSE', color: '#7dd3ff', ascii: 'P~' },
+            { id: 'kaos', name: 'KAOS', color: '#ff7d7d', ascii: 'K!' }
+        ];
+
+        let state = {
+            sessions: [],
+            isNavRetracted: false
+        };
+
+        function log(msg) {
+            const t = document.getElementById('terminal');
+            t.innerHTML = `<div><span style="opacity:0.4">${new Date().toLocaleTimeString()}</span> > ${msg}</div>` + t.innerHTML;
+        }
+
+        function switchView(id, el) {
+            document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+            document.getElementById(`view-${id}`).classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            if(el) el.classList.add('active');
+        }
+
+        // TOGGLE NAV E REAJUSTE DE UI
+        function toggleNav() {
+            state.isNavRetracted = !state.isNavRetracted;
+            const wrap = document.getElementById('nav-wrapper');
+            const arrow = document.getElementById('nav-arrow');
+            const dock = document.getElementById('dock');
+            const float = document.getElementById('float-orb');
+            const view = document.getElementById('viewport');
+
+            if(state.isNavRetracted) {
+                wrap.classList.add('retracted');
+                arrow.style.transform = 'rotate(180deg)';
+                dock.style.bottom = '20px';
+                float.style.bottom = '20px';
+                view.style.paddingBottom = '100px';
+            } else {
+                wrap.classList.remove('retracted');
+                arrow.style.transform = 'rotate(0deg)';
+                dock.style.bottom = '100px';
+                float.style.bottom = '100px';
+                view.style.paddingBottom = '180px';
+            }
+        }
+
+        function renderArchetypes() {
+            const grid = document.getElementById('archetypes-grid');
+            const addBtn = grid.querySelector('.add-app-btn');
+            ARQUETIPOS.forEach(a => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style.setProperty('--c', a.color);
+                card.onclick = () => launchApp(a.id);
+                card.innerHTML = `
+                    <div class="orb"><div class="ascii">${a.ascii}</div></div>
+                    <div style="font-weight:800; letter-spacing:1px; color:${a.color}">${a.name}</div>
+                `;
+                grid.insertBefore(card, addBtn);
+            });
+        }
+
+        function launchApp(id) {
+            const a = ARQUETIPOS.find(x => x.id === id);
+            const sid = 'id_' + Math.random().toString(36).substr(2, 4);
+            state.sessions.push({ ...a, sid, status: 'active' });
+            log(`Iniciando ${a.name} [${sid}]`);
+            renderStack();
+            switchView('stack');
+            updateNavActive('layers');
+        }
+
+        function updateNavActive(iconName) {
+            document.querySelectorAll('.nav-item').forEach(it => {
+                it.classList.toggle('active', it.querySelector(`i[data-lucide="${iconName}"]`) !== null);
+            });
+        }
+
+        function renderStack() {
+            const container = document.getElementById('stack-container');
+            container.innerHTML = '';
+            state.sessions.forEach(s => {
+                if(s.status === 'minimized') return;
+                const win = document.createElement('div');
+                win.className = 'session-window';
+                win.style.borderColor = s.color;
+                win.innerHTML = `
+                    <div class="win-hdr">
+                        <span style="font-size:10px; font-weight:800; color:${s.color}">${s.name} // PROCESS</span>
+                        <div style="display:flex; gap:10px">
+                            <button onclick="minimize('${s.sid}')" style="background:rgba(255,255,255,0.1); border:0; color:#fff; width:24px; height:24px; border-radius:50%"><i data-lucide="minus"></i></button>
+                            <button onclick="closeApp('${s.sid}')" style="background:rgba(255,255,255,0.1); border:0; color:#fff; width:24px; height:24px; border-radius:50%"><i data-lucide="x"></i></button>
+                        </div>
+                    </div>
+                    <div class="win-content">
+                        <div class="orb" style="--c:${s.color}; width:60px; height:60px">
+                            <div class="ascii">${s.ascii}</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(win);
+            });
+            lucide.createIcons();
+            renderDock();
+        }
+
+        function minimize(sid) {
+            const s = state.sessions.find(x => x.sid === sid);
+            if(s) { s.status = 'minimized'; renderStack(); }
+        }
+
+        function closeApp(sid) {
+            state.sessions = state.sessions.filter(x => x.sid !== sid);
+            renderStack();
+        }
+
+        // LÓGICA DE DRAG PERSONALIZADA (PointerEvents para Mobile)
+        function renderDock() {
+            const dock = document.getElementById('dock');
+            dock.innerHTML = '';
+            const mins = state.sessions.filter(s => s.status === 'minimized');
+            
+            mins.forEach((s, idx) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'dock-orb-wrapper';
+                wrapper.dataset.sid = s.sid;
+                wrapper.dataset.index = idx;
+                wrapper.innerHTML = `<div class="orb" style="--c:${s.color}"><div class="ascii">${s.ascii}</div></div>`;
+
+                // Clique para restaurar
+                wrapper.onpointerup = (e) => {
+                    if (wrapper.dataset.dragged === "true") return;
+                    s.status = 'active';
+                    renderStack();
+                };
+
+                // Início do Drag
+                wrapper.onpointerdown = (e) => {
+                    wrapper.setPointerCapture(e.pointerId);
+                    wrapper.dataset.dragged = "false";
+                    const startX = e.clientX;
+                    const rect = wrapper.getBoundingClientRect();
+                    const offsetX = e.clientX - rect.left;
+
+                    wrapper.onpointermove = (emove) => {
+                        if (Math.abs(emove.clientX - startX) > 5) {
+                            wrapper.dataset.dragged = "true";
+                            wrapper.classList.add('dragging');
+                            // Simulação visual de movimento (opcional, foco no snap)
+                        }
+                    };
+
+                    wrapper.onpointerup = (eup) => {
+                        wrapper.releasePointerCapture(e.pointerId);
+                        wrapper.classList.remove('dragging');
+                        wrapper.onpointermove = null;
+                        
+                        if (wrapper.dataset.dragged === "true") {
+                            // Calcula onde soltou em relação aos outros orbs
+                            const elements = [...dock.querySelectorAll('.dock-orb-wrapper')];
+                            const targetIdx = elements.findIndex(el => {
+                                const r = el.getBoundingClientRect();
+                                return eup.clientX < r.left + r.width / 2;
+                            });
+                            
+                            const finalPos = targetIdx === -1 ? elements.length - 1 : targetIdx;
+                            reorderSessions(idx, finalPos);
+                        } else {
+                            // Apenas um clique
+                            s.status = 'active';
+                            renderStack();
+                        }
+                    };
+                };
+
+                dock.appendChild(wrapper);
+            });
+        }
+
+        function reorderSessions(from, to) {
+            const mins = state.sessions.filter(s => s.status === 'minimized');
+            const other = state.sessions.filter(s => s.status !== 'minimized');
+            
+            const [moved] = mins.splice(from, 1);
+            mins.splice(to, 0, moved);
+            
+            state.sessions = [...other, ...mins];
+            renderDock();
+            log(`Dock: ${moved.name} movido.`);
+        }
+
+        window.onload = () => {
+            renderArchetypes();
+            log("Núcleo KOBLLUX V6.1 pronto.");
+        };
+    </script>
+</body>
+</html>
+

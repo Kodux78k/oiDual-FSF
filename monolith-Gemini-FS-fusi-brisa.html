@@ -1,0 +1,1509 @@
+<html lang="pt-BR"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>UNO — Monólito Dual V5 — KODUX</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&amp;family=Orbitron:wght@500;700&amp;family=JetBrains+Mono&amp;display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050812;
+            --surface: rgba(15, 23, 42, 0.7);
+            --surface-bright: rgba(30, 41, 59, 0.8);
+            --accent: #38bdf8;
+            --secondary: #00f2ff;
+            --success: #10b981;
+            --danger: #ef4444;
+            --mut: #94a3b8;
+            --bd: 1px solid rgba(255, 255, 255, 0.08);
+            --r: 20px;
+            --shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+            --tabsH: 80px;
+            --primary-gradient: linear-gradient(135deg, #00f2ff, #0066ff);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        
+        html, body { 
+            height: 100%; margin: 0; 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            color: #f1f5f9; 
+            background: var(--bg);
+            overflow: hidden;
+            user-select: none;
+        }
+
+        body {
+            background: radial-gradient(circle at top right, #0c1e35, #050812);
+        }
+
+        /* Layout Principal */
+        #app-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #viewport {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            scroll-behavior: smooth;
+            padding-bottom: 120px;
+        }
+
+        .view { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Estilo Dash (Dual Style) */
+        header.vision-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-bottom: 25px;
+        }
+
+        .vision-brand {
+            font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 1.2rem;
+            letter-spacing: 2px;
+        }
+        .vision-brand span { color: var(--secondary); font-weight: 400; font-size: 0.8rem; margin-left: 4px; }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border: var(--bd);
+            border-radius: var(--r);
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        /* Grid de Apps */
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .app-item {
+            background: var(--surface);
+            border: var(--bd);
+            border-radius: var(--r);
+            padding: 20px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-item:hover {
+            background: var(--surface-bright);
+            transform: translateY(-5px);
+            border-color: var(--secondary);
+            box-shadow: 0 10px 20px rgba(0, 242, 255, 0.1);
+        }
+
+        .app-item i {
+            font-size: 24px;
+            margin-bottom: 12px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: block;
+        }
+
+        .app-item span {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: block;
+        }
+
+        /* Stack das Sessões */
+        .session-window {
+            background: #000;
+            border: var(--bd);
+            border-radius: var(--r);
+            margin-bottom: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .session-window.collapsed { height: 50px !important; }
+        .session-window.minimized { display: none; }
+        .session-window.maximized {
+            position: fixed; inset: 0; z-index: 2000;
+            border-radius: 0; margin: 0;
+        }
+
+        .win-hdr {
+            padding: 12px 16px;
+            background: rgba(30, 41, 59, 0.5);
+            display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .win-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+        .win-controls { display: flex; gap: 8px; }
+        .win-controls button {
+            width: 28px; height: 28px; border-radius: 50%; border: 0;
+            background: rgba(255,255,255,0.05); color: white; cursor: pointer;
+            font-size: 10px; transition: 0.2s;
+        }
+        .win-controls button:hover { background: rgba(255,255,255,0.15); }
+        .win-controls button.close:hover { background: var(--danger); }
+
+        .win-frame { width: 100%; height: 500px; border: 0; background: #000; flex: 1; }
+
+        /* Barra de Navegação Inferior */
+        .nav-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            height: var(--tabsH);
+            background: rgba(10, 15, 25, 0.85);
+            backdrop-filter: blur(25px);
+            border-top: var(--bd);
+            display: flex; justify-content: space-around; align-items: center;
+            padding-bottom: env(safe-area-inset-bottom);
+            z-index: 3000;
+        }
+
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            color: var(--mut); cursor: pointer; font-size: 9px; font-weight: 700;
+            transition: 0.3s;
+        }
+        .nav-item.active { color: var(--secondary); }
+        .nav-item i { font-size: 18px; }
+
+        /* Dock de Minimizados */
+        #dock {
+            position: fixed; bottom: 95px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 8px; padding: 10px; border-radius: 40px;
+            background: rgba(15, 23, 42, 0.9); border: var(--bd);
+            box-shadow: var(--shadow); z-index: 2500;
+            transition: 0.3s;
+        }
+        #dock:empty { opacity: 0; transform: translate(-50%, 20px); pointer-events: none; }
+        .dock-bubble {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: var(--secondary); color: #000;
+            display: grid; place-items: center; cursor: pointer;
+            box-shadow: 0 0 15px var(--secondary);
+        }
+
+        /* Terminal Logs */
+        #terminal {
+            font-family: 'JetBrains Mono', monospace; font-size: 11px;
+            color: var(--success); background: #000; padding: 15px;
+            border-radius: 12px; height: 200px; overflow-y: auto;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .hidden { display: none !important; }
+    </style>
+<style>
+        :root {
+          --z-base: 0;
+          --z-content: 100;
+          --z-widget: 500;
+          --z-overlay: 1000;
+          --z-system: 5000;
+        }
+      </style><link rel="stylesheet" href="https://kodux78k.github.io/oiDual--Y-/css/mainFS.css"><link rel="stylesheet" href="https://kodux78k.github.io/oiDual--Y-/css/mainFSm.css">
+
+<style>
+        :root {
+          --z-base: 0;
+          --z-content: 100;
+          --z-widget: 500;
+          --z-overlay: 1000;
+          --z-system: 5000;
+        }
+      </style><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400;600;900&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"><link rel="stylesheet" href="https://kodux78k.github.io/oiDual--Y-/css/oiDoDia2.css"><link rel="stylesheet" href="https://kodux78k.github.io/oiDual--Y-/css/KxTsK-unified.css"><style>
+        :root {
+            --neon-blue: #00e5ff;
+            --neon-pink: #ff00ff;
+            --glass-border: rgba(255,255,255,0.08);
+        }
+
+        body {
+            background: #030406;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        /* CONTAINER TURBINADO */
+        .hero-monolith {
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+            background: linear-gradient(165deg, rgba(15, 20, 35, 0.95), rgba(5, 7, 12, 0.98));
+            border: 1px solid var(--glass-border);
+            border-radius: 38px;
+            padding: 30px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8), 
+                        inset 0 1px 1px rgba(255,255,255,0.1);
+            backdrop-filter: blur(25px);
+        }
+
+        /* ELEMENTO KARD INTEGRADO NO TOPO */
+        .identity-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .mini-avatar-wrap {
+            width: 60px;
+            height: 60px;
+            position: relative;
+        }
+
+        #avatarCanvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 14px;
+            background: #000;
+            border: 1px solid rgba(0, 229, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.1);
+        }
+
+        .name-input-wrap {
+            flex: 1;
+        }
+
+        .kard-input-mini {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+            outline: none;
+        }
+
+        .kard-input-mini:focus {
+            color: var(--neon-blue);
+            text-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+        }
+
+        .kard-sub-meta {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: #6a7495;
+            display: flex;
+            gap: 10px;
+            margin-top: 2px;
+        }
+
+        /* RE-ESTILIZAÇÃO DO HERO CARD */
+        .hero-content-core {
+            text-align: left;
+        }
+
+        .hero-greeting {
+            font-size: 1.8rem !important;
+            margin-bottom: 8px !important;
+        }
+
+        .hero-subtitle {
+            font-size: 0.9rem !important;
+            line-height: 1.4 !important;
+            color: #9aa4c8 !important;
+            min-height: 40px;
+        }
+
+        .time-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 229, 255, 0.1);
+            color: var(--neon-blue);
+            padding: 6px 12px;
+            border-radius: 99px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            margin: 20px 0;
+            border: 1px solid rgba(0, 229, 255, 0.2);
+        }
+
+        /* SLIDER CUSTOMIZADO */
+        .slider-box {
+            margin-top: 10px;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: #555e7d;
+            margin-bottom: 8px;
+        }
+
+        .range-container {
+            position: relative;
+            height: 6px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+
+        #rangeFill {
+            position: absolute;
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink));
+            border-radius: 10px;
+            width: 50%;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+        }
+
+        .hero-range {
+            position: absolute;
+            top: -7px;
+            width: 100%;
+            -webkit-appearance: none;
+            background: transparent;
+            cursor: pointer;
+            z-index: 5;
+        }
+
+        .hero-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border: 3px solid var(--neon-blue);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .mood-indicator {
+            text-align: center;
+            margin-top: 15px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--neon-pink);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* ANIMAÇÃO DE ENTRADA */
+        .reveal {
+            animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style><style>
+        :root {
+          --z-base: 0;
+          --z-content: 100;
+          --z-widget: 500;
+          --z-overlay: 1000;
+          --z-system: 5000;
+        }
+      </style><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&amp;family=Orbitron:wght@500;700&amp;display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><style>
+        /* CORE SYSTEM STYLES - NEBULA VISION THEME */
+        :root {
+            --bg-deep: #050811;
+            --glass-panel: rgba(20, 20, 30, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --primary: #00f2ff;
+            --secondary: #bd00ff;
+            --accent: #ffffff;
+            --text-main: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.6);
+            --blur-amt: 20px;
+            --success: #00ff9d;
+            --danger: #ff4b6b;
+            --z-stack: 100;
+            --z-nav: 1000;
+        }
+
+        body.solar-day {
+            --bg-deep: #f0f4f8;
+            --glass-panel: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --text-main: #1a1a1a;
+            --text-muted: #555;
+            background: radial-gradient(circle at 50% -20%, #e0f2fe 0%, #f0f9ff 60%) !important;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background: 
+                radial-gradient(circle at 50% -20%, #2a0045 0%, transparent 60%),
+                radial-gradient(circle at 100% 50%, #003645 0%, transparent 50%),
+                radial-gradient(circle at 0% 80%, #1a0b2e 0%, transparent 50%),
+                #000000;
+            padding-bottom: 120px;
+            transition: background 0.8s ease;
+        }
+
+        /* FRAME SHELL / SESSION CARDS */
+        #stackWrap {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .session {
+            background: var(--glass-panel);
+            backdrop-filter: blur(var(--blur-amt));
+            -webkit-backdrop-filter: blur(var(--blur-amt));
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.5s ease forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .session-head {
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.03);
+            cursor: grab;
+        }
+
+        .session-title {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .tools { display: flex; gap: 10px; }
+        .tools button {
+            background: none; border: none; color: var(--text-muted);
+            width: 28px; height: 28px; border-radius: 50%;
+            cursor: pointer; font-size: 14px; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .tools button:hover { background: rgba(255,255,255,0.1); color: var(--text-main); }
+        .tools button[data-act="close"]:hover { color: var(--danger); }
+
+        .frame-shell { position: relative; width: 100%; height: 400px; }
+        iframe { width: 100%; height: 100%; border: none; background: #fff; }
+
+        .session.min .frame-shell { height: 0; }
+        .session.max { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 2000; border-radius: 0; margin: 0; }
+        .session.max .frame-shell { height: calc(100vh - 56px); }
+
+        /* VISION HUD COMPONENTS */
+        .vision-stack { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
+        .view-section { display: none; opacity: 0; }
+        .view-section.active { display: flex; flex-direction: column; animation: fadeIn 0.4s forwards; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .vision-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
+        .vision-brand { font-family: 'Orbitron'; font-size: 20px; letter-spacing: 2px; }
+        .vision-brand span { color: var(--primary); text-shadow: 0 0 15px var(--primary); }
+
+        .glass-card {
+            background: var(--glass-panel);
+            backdrop-filter: blur(var(--blur-amt));
+            border: 1px solid var(--glass-border);
+            border-radius: 24px; padding: 20px; transition: 0.3s;
+        }
+
+        .metric-huge { font-size: 38px; font-weight: 800; background: linear-gradient(90deg, var(--text-main), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .metric-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+
+        /* AI ORB */
+        .ai-orb {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, var(--primary), var(--secondary));
+            filter: blur(8px); animation: pulse 3s infinite ease-in-out;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.15); } }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(40px); border: 1px solid var(--glass-border);
+            border-radius: 50px; padding: 12px 28px;
+            display: flex; gap: 35px; z-index: var(--z-nav);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.8);
+        }
+        .nav-icon { font-size: 22px; color: var(--text-muted); transition: 0.3s; cursor: pointer; }
+        .nav-icon.active { color: var(--primary); transform: translateY(-3px); text-shadow: 0 0 10px var(--primary); }
+
+        /* INPUTS & BUTTONS */
+        .btn-glass {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+            color: var(--text-main); padding: 15px; border-radius: 18px; font-weight: 600;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            cursor: pointer; transition: 0.2s;
+        }
+        .btn-glass:active { transform: scale(0.95); }
+        input { 
+            width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); 
+            padding: 12px; border-radius: 12px; color: white; outline: none;
+        }
+
+        .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* CUSTOM SCROLLBAR */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
+    </style><style>
+        :root {
+          --z-base: 0;
+          --z-content: 100;
+          --z-widget: 500;
+          --z-overlay: 1000;
+          --z-system: 5000;
+        }
+      </style></head><body><button id="add">➕ Abrir App</button>
+
+<div id="stackWrap"></div>
+
+<link rel="stylesheet" href="https://kodux78k.github.io/oiDual--Y-/css/mainFSm.css">
+
+<script src="https://kodux78k.github.io/oiDual--Y-/js/oiFS.js"></script>
+
+
+
+
+
+
+    <div id="app-container">
+        
+        <div id="viewport">
+            
+            <!-- HOME VIEW -->
+            <section id="view-home" class="view">
+                <header class="vision-header">
+                    <div class="vision-brand">MONOLITH<span>DUAL V5</span></div>
+                    <div style="font-size: 10px; font-weight: 800; color: var(--secondary)">KODUX NODE 01</div>
+                </header>
+
+                <div class="glass-card" style="border-left: 4px solid var(--secondary);">
+                    <div style="display:flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 10px; opacity: 0.5; letter-spacing: 1px; margin-bottom: 4px;">KERNEL STATUS</div>
+                            <div style="font-size: 14px; font-weight: 800;">Trinity Engine: Active</div>
+                        </div>
+                        <div class="ai-orb"></div>
+                    </div>
+                </div>
+
+                <div class="apps-grid" id="apps-container">
+                    <!-- Gerado via JS -->
+                </div>
+            </section>
+
+            <!-- STACK VIEW -->
+            <section id="view-stack" class="view hidden">
+                <header class="vision-header">
+                    <div class="vision-brand">PROCESS<span>STACK</span></div>
+                    <button onclick="clearAll()" style="background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:6px; font-size:10px; padding:4px 8px; cursor:pointer;">KILL ALL</button>
+                </header>
+                <div id="stack-container">
+                    <div style="text-align: center; opacity: 0.3; padding: 40px;">
+                        <i class="fa-solid fa-layer-group" style="font-size: 30px; margin-bottom: 10px;"></i>
+                        <p style="font-size: 12px;">Nenhum processo no monólito.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- LOGS VIEW -->
+            <section id="view-logs" class="view hidden">
+                <header class="vision-header">
+                    <div class="vision-brand">SYSTEM<span>LOGS</span></div>
+                </header>
+                <div id="terminal">
+                    <div>[00:00:01] Initializing Monolith Kernel...</div>
+                    <div>[00:00:02] Dual Trinity V5 Protocol engaged.</div>
+                    <div>[00:00:03] Node: Sorocaba/SP connected.</div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- DOCK -->
+        <div id="dock"></div>
+
+        <!-- NAVIGATION -->
+        <nav class="nav-bar">
+            <div class="nav-item active" onclick="switchView('home', this)">
+                <i class="fa-solid fa-grip"></i>
+                <span>HOME</span>
+            </div>
+            <div class="nav-item" onclick="switchView('stack', this)">
+                <i class="fa-solid fa-ghost"></i>
+                <span>STACK</span>
+            </div>
+            <div class="nav-item" onclick="switchView('logs', this)">
+                <i class="fa-solid fa-terminal"></i>
+                <span>LOGS</span>
+            </div>
+        </nav>
+
+    </div>
+
+    <script>
+        const APPS = [
+            { id: 'atlas', name: 'Atlas Strategic', icon: 'fa-satellite', url: 'https://duckduckgo.com' },
+            { id: 'serena', name: 'Serena AI', icon: 'fa-leaf', url: 'https://wikipedia.org' },
+            { id: 'solus', name: 'Solus Arcana', icon: 'fa-gem', url: 'https://bing.com' },
+            { id: 'kodux', name: 'Kodux Lab', icon: 'fa-flask-vial', url: 'https://example.com' },
+            { id: 'lumine', name: 'Lumine', icon: 'fa-bolt', url: 'https://www.google.com/search?q=news' },
+            { id: 'vortex', name: 'Vortex CRM', icon: 'fa-hurricane', url: 'https://duckduckgo.com/?q=crm' }
+        ];
+
+        const state = {
+            activeSessions: [],
+            currentView: 'home'
+        };
+
+        function log(msg) {
+            const term = document.getElementById('terminal');
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.textContent = `[${time}] ${msg}`;
+            term.prepend(entry);
+        }
+
+        function switchView(viewId, el) {
+            document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            state.currentView = viewId;
+            log(`View switched to: ${viewId.toUpperCase()}`);
+        }
+
+        function renderApps() {
+            const container = document.getElementById('apps-container');
+            container.innerHTML = '';
+            APPS.forEach(app => {
+                const item = document.createElement('div');
+                item.className = 'app-item';
+                item.innerHTML = `
+                    <i class="fa-solid ${app.icon}"></i>
+                    <span>${app.name}</span>
+                `;
+                item.onclick = () => openApp(app);
+                container.appendChild(item);
+            });
+        }
+
+        function openApp(app) {
+            const sid = 'session_' + Math.random().toString(36).substr(2, 9);
+            const session = { ...app, sid, status: 'active', height: 500 };
+            state.activeSessions.push(session);
+            
+            renderStack();
+            switchView('stack', document.querySelectorAll('.nav-item')[1]);
+            log(`Started Process: ${app.name}`);
+        }
+
+        function renderStack() {
+            const container = document.getElementById('stack-container');
+            if (state.activeSessions.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; opacity: 0.3; padding: 40px;">
+                        <i class="fa-solid fa-layer-group" style="font-size: 30px; margin-bottom: 10px;"></i>
+                        <p style="font-size: 12px;">Nenhum processo no monólito.</p>
+                    </div>
+                `;
+                renderDock();
+                return;
+            }
+
+            container.innerHTML = '';
+            state.activeSessions.forEach(session => {
+                if (session.status === 'minimized') return;
+
+                const win = document.createElement('div');
+                win.className = `session-window ${session.status === 'maximized' ? 'maximized' : ''}`;
+                win.id = session.sid;
+                win.style.height = session.status === 'maximized' ? '100%' : `${session.height}px`;
+
+                win.innerHTML = `
+                    <div class="win-hdr" onclick="toggleCollapse('${session.sid}')">
+                        <div class="win-title">
+                            <i class="fa-solid ${session.icon}"></i>
+                            ${session.name}
+                        </div>
+                        <div class="win-controls" onclick="event.stopPropagation()">
+                            <button onclick="minimizeApp('${session.sid}')"><i class="fa-solid fa-minus"></i></button>
+                            <button onclick="maximizeApp('${session.sid}')"><i class="fa-solid fa-expand"></i></button>
+                            <button class="close" onclick="closeApp('${session.sid}')"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+                    <iframe class="win-frame" src="${session.url}"></iframe>
+                `;
+                container.appendChild(win);
+            });
+            renderDock();
+        }
+
+        function minimizeApp(sid) {
+            const s = state.activeSessions.find(x => x.sid === sid);
+            if (s) s.status = 'minimized';
+            renderStack();
+            log(`Process minimized: ${s.name}`);
+        }
+
+        function maximizeApp(sid) {
+            const s = state.activeSessions.find(x => x.sid === sid);
+            if (s) s.status = (s.status === 'maximized') ? 'active' : 'maximized';
+            renderStack();
+        }
+
+        function closeApp(sid) {
+            state.activeSessions = state.activeSessions.filter(x => x.sid !== sid);
+            renderStack();
+            log(`Process terminated: ${sid}`);
+        }
+
+        function clearAll() {
+            state.activeSessions = [];
+            renderStack();
+            log(`Kernel Clean: All processes killed.`);
+        }
+
+        function renderDock() {
+            const dock = document.getElementById('dock');
+            dock.innerHTML = '';
+            const minimized = state.activeSessions.filter(s => s.status === 'minimized');
+            
+            minimized.forEach(s => {
+                const b = document.createElement('div');
+                b.className = 'dock-bubble';
+                b.innerHTML = `<i class="fa-solid ${s.icon}"></i>`;
+                b.onclick = () => {
+                    s.status = 'active';
+                    renderStack();
+                };
+                dock.appendChild(b);
+            });
+        }
+
+        function toggleCollapse(sid) {
+            const win = document.getElementById(sid);
+            if (win) win.classList.toggle('collapsed');
+        }
+
+        // Init
+        window.onload = () => {
+            renderApps();
+            log("System Ready. Waiting for input...");
+        };
+    </script>
+
+
+
+<script src="https://kodux78k.github.io/oiDual--Y-/js/oiFS.js"></script>
+
+<div class="hero-monolith reveal">
+    <!-- Cabeçalho de Identidade (Kard Fusion) -->
+    <div class="identity-header">
+        <div class="mini-avatar-wrap">
+            <canvas id="avatarCanvas"></canvas>
+        </div>
+        <div class="name-input-wrap">
+            <input type="text" id="kardName" class="kard-input-mini" value="DUAL" autocomplete="off" spellcheck="false">
+            <div class="kard-sub-meta">
+                <span><i data-lucide="fingerprint" style="width:10px"></i> <span id="kardHash">#078K</span></span>
+                <span><i data-lucide="zap" style="width:10px"></i> LVL <span id="kardLvl">99</span></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteúdo do Hero -->
+    <div class="hero-content-core">
+        <div class="hero-greeting" id="heroGreeting">Bom dia, Dual</div>
+        <div class="hero-subtitle" id="heroSubtitle">Sincronizando sua dose de hoje...</div>
+        
+        <div class="time-badge">
+            <i data-lucide="clock" style="width:14px"></i>
+            <span id="timeNow">00:00:00</span>
+        </div>
+
+        <!-- Controle de Mood/Hora -->
+        <div class="slider-box">
+            <div class="slider-labels">
+                <span>06H</span>
+                <span id="moodLabel">MANHÃ FOCADA</span>
+                <span>23H</span>
+            </div>
+            <div class="range-container">
+                <div id="rangeFill"></div>
+                <input id="timeRange" type="range" min="6" max="23" value="9" class="hero-range">
+            </div>
+        </div>
+        <div class="mood-indicator" id="statusPulse">SYNC_ACTIVE</div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script>
+    // Configurações de Frases (Moods)
+    const DATA = {
+        manha: { label: "Manhã Focada", sub: "Primeiro passo, sem pressa. Sua dose está pronta.", color: "#00e5ff" },
+        tarde: { label: "Tarde Produtiva", sub: "Checkpoint do foco. Mantenha a consistência.", color: "#ff00ff" },
+        noite: { label: "Noite Tranquila", sub: "Desacelera sem travar. 1% a cada dia.", color: "#b537f2" }
+    };
+
+    const els = {
+        nameInput: document.getElementById('kardName'),
+        greeting: document.getElementById('heroGreeting'),
+        subtitle: document.getElementById('heroSubtitle'),
+        clock: document.getElementById('timeNow'),
+        range: document.getElementById('timeRange'),
+        fill: document.getElementById('rangeFill'),
+        moodLabel: document.getElementById('moodLabel'),
+        canvas: document.getElementById('avatarCanvas'),
+        hash: document.getElementById('kardHash'),
+        lvl: document.getElementById('kardLvl')
+    };
+
+    // Sincronização de Identidade
+    function stringToSeed(str) {
+        let h = 0;
+        for(let i=0; i<str.length; i++) h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+        return h;
+    }
+
+    function drawAvatar(name) {
+        const ctx = els.canvas.getContext('2d');
+        els.canvas.width = 120; els.canvas.height = 120;
+        let seed = stringToSeed(name || 'Dual');
+        const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+        
+        ctx.fillStyle = '#0a0a0e'; ctx.fillRect(0,0,120,120);
+        const c1 = '#00e5ff', c2 = '#ff00ff';
+        
+        ctx.globalAlpha = 0.2;
+        for(let i=0; i<5; i++){
+            ctx.beginPath(); ctx.arc(rand()*120, rand()*120, rand()*40, 0, Math.PI*2);
+            ctx.fillStyle = rand() > 0.5 ? c1 : c2; ctx.fill();
+        }
+        
+        ctx.globalAlpha = 1; ctx.translate(60,60); ctx.rotate(rand() * Math.PI);
+        ctx.beginPath();
+        const sides = Math.floor(rand()*3)+3;
+        for(let i=0; i<sides; i++){ 
+            const a = (i/sides) * Math.PI*2; 
+            ctx.lineTo(Math.cos(a)*30, Math.sin(a)*30); 
+        }
+        ctx.closePath(); ctx.strokeStyle = c1; ctx.lineWidth = 2; ctx.stroke();
+        ctx.resetTransform();
+    }
+
+    function updateSync() {
+        const val = els.nameInput.value.trim() || "DUAL";
+        const h = new Date().getHours();
+        let saudacao = "Bom dia";
+        let moodKey = "manha";
+
+        if(h >= 12 && h < 18) { saudacao = "Boa tarde"; moodKey = "tarde"; }
+        else if(h >= 18 || h < 6) { saudacao = "Boa noite"; moodKey = "noite"; }
+
+        els.greeting.innerText = `${saudacao}, ${val}`;
+        els.hash.innerText = '#' + Math.abs(stringToSeed(val)).toString().substring(0,4);
+        els.lvl.innerText = (Math.abs(stringToSeed(val)) % 99) + 1;
+        drawAvatar(val);
+    }
+
+    // Controle do Slider
+    function updateMood() {
+        const val = parseInt(els.range.value);
+        const percent = ((val - 6) / (23 - 6)) * 100;
+        els.fill.style.width = percent + "%";
+
+        let m = "manha";
+        if(val >= 12 && val < 18) m = "tarde";
+        if(val >= 18) m = "noite";
+
+        els.moodLabel.innerText = DATA[m].label;
+        els.subtitle.innerText = DATA[m].sub;
+        
+        // Efeito visual no fill do slider
+        els.fill.style.background = `linear-gradient(90deg, #00e5ff, ${DATA[m].color})`;
+    }
+
+    // Relógio Real-time
+    function updateClock() {
+        const now = new Date();
+        els.clock.innerText = now.toLocaleTimeString('pt-BR');
+    }
+
+    // Eventos
+    els.nameInput.addEventListener('input', updateSync);
+    els.range.addEventListener('input', updateMood);
+
+    // Init
+    window.onload = () => {
+        lucide.createIcons();
+        updateClock();
+        setInterval(updateClock, 1000);
+        
+        // Set inicial baseado na hora real
+        const nowH = new Date().getHours();
+        els.range.value = Math.min(23, Math.max(6, nowH));
+        
+        updateSync();
+        updateMood();
+    };
+</script>
+
+
+
+
+<script src="https://unpkg.com/lucide@latest"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script><script>
+    // Configurações de Frases (Moods)
+    const DATA = {
+        manha: { label: "Manhã Focada", sub: "Primeiro passo, sem pressa. Sua dose está pronta.", color: "#00e5ff" },
+        tarde: { label: "Tarde Produtiva", sub: "Checkpoint do foco. Mantenha a consistência.", color: "#ff00ff" },
+        noite: { label: "Noite Tranquila", sub: "Desacelera sem travar. 1% a cada dia.", color: "#b537f2" }
+    };
+
+    const els = {
+        nameInput: document.getElementById('kardName'),
+        greeting: document.getElementById('heroGreeting'),
+        subtitle: document.getElementById('heroSubtitle'),
+        clock: document.getElementById('timeNow'),
+        range: document.getElementById('timeRange'),
+        fill: document.getElementById('rangeFill'),
+        moodLabel: document.getElementById('moodLabel'),
+        canvas: document.getElementById('avatarCanvas'),
+        hash: document.getElementById('kardHash'),
+        lvl: document.getElementById('kardLvl')
+    };
+
+    // Sincronização de Identidade
+    function stringToSeed(str) {
+        let h = 0;
+        for(let i=0; i<str.length; i++) h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+        return h;
+    }
+
+    function drawAvatar(name) {
+        const ctx = els.canvas.getContext('2d');
+        els.canvas.width = 120; els.canvas.height = 120;
+        let seed = stringToSeed(name || 'Dual');
+        const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+        
+        ctx.fillStyle = '#0a0a0e'; ctx.fillRect(0,0,120,120);
+        const c1 = '#00e5ff', c2 = '#ff00ff';
+        
+        ctx.globalAlpha = 0.2;
+        for(let i=0; i<5; i++){
+            ctx.beginPath(); ctx.arc(rand()*120, rand()*120, rand()*40, 0, Math.PI*2);
+            ctx.fillStyle = rand() > 0.5 ? c1 : c2; ctx.fill();
+        }
+        
+        ctx.globalAlpha = 1; ctx.translate(60,60); ctx.rotate(rand() * Math.PI);
+        ctx.beginPath();
+        const sides = Math.floor(rand()*3)+3;
+        for(let i=0; i<sides; i++){ 
+            const a = (i/sides) * Math.PI*2; 
+            ctx.lineTo(Math.cos(a)*30, Math.sin(a)*30); 
+        }
+        ctx.closePath(); ctx.strokeStyle = c1; ctx.lineWidth = 2; ctx.stroke();
+        ctx.resetTransform();
+    }
+
+    function updateSync() {
+        const val = els.nameInput.value.trim() || "DUAL";
+        const h = new Date().getHours();
+        let saudacao = "Bom dia";
+        let moodKey = "manha";
+
+        if(h >= 12 && h < 18) { saudacao = "Boa tarde"; moodKey = "tarde"; }
+        else if(h >= 18 || h < 6) { saudacao = "Boa noite"; moodKey = "noite"; }
+
+        els.greeting.innerText = `${saudacao}, ${val}`;
+        els.hash.innerText = '#' + Math.abs(stringToSeed(val)).toString().substring(0,4);
+        els.lvl.innerText = (Math.abs(stringToSeed(val)) % 99) + 1;
+        drawAvatar(val);
+    }
+
+    // Controle do Slider
+    function updateMood() {
+        const val = parseInt(els.range.value);
+        const percent = ((val - 6) / (23 - 6)) * 100;
+        els.fill.style.width = percent + "%";
+
+        let m = "manha";
+        if(val >= 12 && val < 18) m = "tarde";
+        if(val >= 18) m = "noite";
+
+        els.moodLabel.innerText = DATA[m].label;
+        els.subtitle.innerText = DATA[m].sub;
+        
+        // Efeito visual no fill do slider
+        els.fill.style.background = `linear-gradient(90deg, #00e5ff, ${DATA[m].color})`;
+    }
+
+    // Relógio Real-time
+    function updateClock() {
+        const now = new Date();
+        els.clock.innerText = now.toLocaleTimeString('pt-BR');
+    }
+
+    // Eventos
+    els.nameInput.addEventListener('input', updateSync);
+    els.range.addEventListener('input', updateMood);
+
+    // Init
+    window.onload = () => {
+        lucide.createIcons();
+        updateClock();
+        setInterval(updateClock, 1000);
+        
+        // Set inicial baseado na hora real
+        const nowH = new Date().getHours();
+        els.range.value = Math.min(23, Math.max(6, nowH));
+        
+        updateSync();
+        updateMood();
+    };
+</script>
+
+    <div id="stackWrap">
+        <!-- Dashboard Home View -->
+        <div id="view-home" class="view-section active vision-stack">
+            <header class="vision-header">
+                <div class="vision-brand" id="brand-title">DUAL<span>V4</span></div>
+                <div style="width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px;" id="user-avatar">K</div>
+            </header>
+
+            <!-- Metrics -->
+            <div class="glass-card">
+                <div style="display:flex; justify-content:space-between;">
+                    <span class="metric-label">VGV ATIVO SOROCABA</span>
+                    <span class="metric-label" style="color:var(--primary)" id="model-tag">GEMINI 2.0</span>
+                </div>
+                <div class="metric-huge">R$ 14.8M</div>
+                <div style="margin-top:10px; height:4px; background:rgba(255,255,255,0.1); border-radius:2px; overflow:hidden;">
+                    <div style="width:75%; height:100%; background:var(--primary); box-shadow:0 0 10px var(--primary);"></div>
+                </div>
+            </div>
+
+            <!-- AI Agent -->
+            <div class="glass-card" style="border-left: 4px solid var(--secondary);">
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <div class="ai-orb"></div>
+                    <div style="flex:1">
+                        <h4 style="font-size:13px; font-weight:800; letter-spacing: 0.5px;">ARTEMIS INTELLIGENCE</h4>
+                        <p id="ai-status" style="font-size:11px; opacity:0.7; line-height: 1.4; margin-top: 4px;">Sincronizado com mercado local.</p>
+                    </div>
+                </div>
+                <button class="btn-glass" onclick="generateInsight()" style="margin-top:12px; padding: 10px; width: 100%; font-size: 11px;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Gerar Insight Tático
+                </button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <button class="btn-glass" onclick="openApp('Busca Genus', 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d117072.7538965668!2d-47.5349258!3d-23.5146143!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94c5f54ca4787a71%3A0x6b432a514d3f3f5a!2sSorocaba%2C%20SP!5e0!3m2!1spt-BR!2sbr!4v1700000000000')">
+                    <i class="fa-solid fa-map-location-dot" style="color:var(--primary)"></i>
+                    Mapa
+                </button>
+                <button class="btn-glass" onclick="toggleSolar()">
+                    <i class="fa-solid fa-circle-half-stroke" style="color:var(--secondary)"></i>
+                    Temas
+                </button>
+            </div>
+            
+            <div id="sessionContainer">
+                <!-- Session Cards will be injected here -->
+            </div>
+        </div>
+
+        <!-- CRM / Leads View -->
+        <div id="view-crm" class="view-section vision-stack">
+            <header class="vision-header">
+                <div class="vision-brand">FLUXO<span>SOLUS</span></div>
+            </header>
+            <div class="glass-card" id="crm-list">
+                <!-- CRM Content -->
+            </div>
+        </div>
+
+        <!-- Settings View -->
+        <div id="view-settings" class="view-section vision-stack">
+            <header class="vision-header">
+                <div class="vision-brand">SISTEMA<span>CONFIG</span></div>
+            </header>
+            <div class="glass-card">
+                <p class="metric-label" style="margin-bottom: 15px;">Conexão Artemis (OpenRouter)</p>
+                <input type="password" id="api-key" placeholder="API Key sk-..." style="margin-bottom: 10px;">
+                <input type="text" id="api-model" placeholder="Modelo (ex: google/gemini-2.0-flash-001)" style="margin-bottom: 20px;">
+                
+                <p class="metric-label" style="margin-bottom: 15px;">Identidade Corretor</p>
+                <input type="text" id="user-name" placeholder="Nome Completo" style="margin-bottom: 10px;">
+                <button class="btn-glass" onclick="saveSettings()" style="width: 100%; background: var(--primary); color: #000;">
+                    <i class="fa-solid fa-floppy-disk"></i> Salvar Alterações
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="bottom-nav">
+        <i class="fa-solid fa-house-chimney nav-icon active" onclick="navTo('home', this)"></i>
+        <i class="fa-solid fa-plus-circle nav-icon" style="color:var(--primary); font-size: 30px;" onclick="openApp('Nova Sessão', 'about:blank')"></i>
+        <i class="fa-solid fa-users-viewfinder nav-icon" onclick="navTo('crm', this)"></i>
+        <i class="fa-solid fa-gear nav-icon" onclick="navTo('settings', this)"></i>
+    </nav>
+
+    <script>
+        /**
+         * STACK SESSION MONOLITH - CORE ENGINE
+         */
+
+        const STATE = {
+            sessions: JSON.parse(localStorage.getItem('monolith_sessions') || '[]'),
+            config: JSON.parse(localStorage.getItem('monolith_config') || '{"user":"KODUX Raphael","model":"google/gemini-2.0-flash-001","apiKey":"","theme":"night"}')
+        };
+
+        // Initialize
+        function init() {
+            applyTheme(STATE.config.theme);
+            renderSessions();
+            updateIdentity();
+            navTo('home');
+            
+            // Fill settings
+            document.getElementById('api-key').value = STATE.config.apiKey;
+            document.getElementById('api-model').value = STATE.config.model;
+            document.getElementById('user-name').value = STATE.config.user;
+        }
+
+        function updateIdentity() {
+            const user = STATE.config.user || "KODUX";
+            const initials = user.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+            document.getElementById('user-avatar').innerText = initials;
+            document.getElementById('model-tag').innerText = (STATE.config.model || "").split('/')[1]?.toUpperCase() || "DUAL AI";
+        }
+
+        // Navigation
+        function navTo(viewId, el) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.getElementById(`view-${viewId}`).classList.add('active');
+            
+            if(el) {
+                document.querySelectorAll('.nav-icon').forEach(i => i.classList.remove('active'));
+                el.classList.add('active');
+            }
+            haptic();
+        }
+
+        // Session Management
+        function openApp(title, url) {
+            const id = 'sess_' + Date.now();
+            const newSession = { id, title, url, min: false, max: false };
+            STATE.sessions.unshift(newSession);
+            saveState();
+            renderSessions();
+            haptic();
+        }
+
+        function renderSessions() {
+            const container = document.getElementById('sessionContainer');
+            container.innerHTML = STATE.sessions.map(s => `
+                <div class="session ${s.min ? 'min' : ''} ${s.max ? 'max' : ''}" id="${s.id}">
+                    <div class="session-head">
+                        <div class="session-title">${s.title}</div>
+                        <div class="tools">
+                            <button onclick="controlSession('${s.id}', 'min')"><i class="fa-solid fa-window-minimize"></i></button>
+                            <button onclick="controlSession('${s.id}', 'max')"><i class="fa-solid fa-expand"></i></button>
+                            <button onclick="controlSession('${s.id}', 'close')" data-act="close"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+                    <div class="frame-shell">
+                        <iframe src="${s.url}" loading="lazy" allow="geolocation; microphone; camera"></iframe>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function controlSession(id, action) {
+            const idx = STATE.sessions.findIndex(s => s.id === id);
+            if(idx === -1) return;
+
+            if(action === 'close') {
+                STATE.sessions.splice(idx, 1);
+            } else if(action === 'min') {
+                STATE.sessions[idx].min = !STATE.sessions[idx].min;
+                STATE.sessions[idx].max = false;
+            } else if(action === 'max') {
+                STATE.sessions[idx].max = !STATE.sessions[idx].max;
+                STATE.sessions[idx].min = false;
+            }
+
+            saveState();
+            renderSessions();
+            haptic();
+        }
+
+        // AI Artemis Integration
+        async function generateInsight() {
+            const status = document.getElementById('ai-status');
+            if(!STATE.config.apiKey) {
+                status.innerHTML = '<span style="color:var(--danger)">Configure sua API Key nas configurações.</span>';
+                return;
+            }
+
+            status.innerHTML = '<span class="spinner"></span> Consultando Artemis Neural...';
+            
+            try {
+                const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${STATE.config.apiKey}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: STATE.config.model,
+                        messages: [
+                            { role: "system", content: "Você é Artemis, IA tática imobiliária de Sorocaba/SP. Responda em 2 frases curtas e objetivas sobre leads ou VGV." },
+                            { role: "user", content: `Insight para ${STATE.config.user}. O mercado está com VGV de 14.8M.` }
+                        ]
+                    })
+                });
+
+                const data = await response.json();
+                status.innerText = data.choices[0]?.message?.content || "Artemis offline. Tente novamente.";
+                haptic();
+            } catch (e) {
+                status.innerText = "Erro na conexão neural. Verifique sua chave.";
+            }
+        }
+
+        // Utils
+        function saveState() {
+            localStorage.setItem('monolith_sessions', JSON.stringify(STATE.sessions));
+        }
+
+        function saveSettings() {
+            STATE.config.apiKey = document.getElementById('api-key').value;
+            STATE.config.model = document.getElementById('api-model').value;
+            STATE.config.user = document.getElementById('user-name').value;
+            localStorage.setItem('monolith_config', JSON.stringify(STATE.config));
+            updateIdentity();
+            alert("Sincronização concluída.");
+            haptic();
+        }
+
+        function toggleSolar() {
+            STATE.config.theme = STATE.config.theme === 'day' ? 'night' : 'day';
+            localStorage.setItem('monolith_config', JSON.stringify(STATE.config));
+            applyTheme(STATE.config.theme);
+            haptic();
+        }
+
+        function applyTheme(theme) {
+            if(theme === 'day') document.body.classList.add('solar-day');
+            else document.body.classList.remove('solar-day');
+        }
+
+        function haptic() {
+            if(window.navigator.vibrate) window.navigator.vibrate(15);
+        }
+
+        window.onload = init;
+    </script>
+
+
+
+<script>
+        /**
+         * STACK SESSION MONOLITH - CORE ENGINE
+         */
+
+        const STATE = {
+            sessions: JSON.parse(localStorage.getItem('monolith_sessions') || '[]'),
+            config: JSON.parse(localStorage.getItem('monolith_config') || '{"user":"KODUX Raphael","model":"google/gemini-2.0-flash-001","apiKey":"","theme":"night"}')
+        };
+
+        // Initialize
+        function init() {
+            applyTheme(STATE.config.theme);
+            renderSessions();
+            updateIdentity();
+            navTo('home');
+            
+            // Fill settings
+            document.getElementById('api-key').value = STATE.config.apiKey;
+            document.getElementById('api-model').value = STATE.config.model;
+            document.getElementById('user-name').value = STATE.config.user;
+        }
+
+        function updateIdentity() {
+            const user = STATE.config.user || "KODUX";
+            const initials = user.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+            document.getElementById('user-avatar').innerText = initials;
+            document.getElementById('model-tag').innerText = (STATE.config.model || "").split('/')[1]?.toUpperCase() || "DUAL AI";
+        }
+
+        // Navigation
+        function navTo(viewId, el) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.getElementById(`view-${viewId}`).classList.add('active');
+            
+            if(el) {
+                document.querySelectorAll('.nav-icon').forEach(i => i.classList.remove('active'));
+                el.classList.add('active');
+            }
+            haptic();
+        }
+
+        // Session Management
+        function openApp(title, url) {
+            const id = 'sess_' + Date.now();
+            const newSession = { id, title, url, min: false, max: false };
+            STATE.sessions.unshift(newSession);
+            saveState();
+            renderSessions();
+            haptic();
+        }
+
+        function renderSessions() {
+            const container = document.getElementById('sessionContainer');
+            container.innerHTML = STATE.sessions.map(s => `
+                <div class="session ${s.min ? 'min' : ''} ${s.max ? 'max' : ''}" id="${s.id}">
+                    <div class="session-head">
+                        <div class="session-title">${s.title}</div>
+                        <div class="tools">
+                            <button onclick="controlSession('${s.id}', 'min')"><i class="fa-solid fa-window-minimize"></i></button>
+                            <button onclick="controlSession('${s.id}', 'max')"><i class="fa-solid fa-expand"></i></button>
+                            <button onclick="controlSession('${s.id}', 'close')" data-act="close"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+                    <div class="frame-shell">
+                        <iframe src="${s.url}" loading="lazy" allow="geolocation; microphone; camera"></iframe>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function controlSession(id, action) {
+            const idx = STATE.sessions.findIndex(s => s.id === id);
+            if(idx === -1) return;
+
+            if(action === 'close') {
+                STATE.sessions.splice(idx, 1);
+            } else if(action === 'min') {
+                STATE.sessions[idx].min = !STATE.sessions[idx].min;
+                STATE.sessions[idx].max = false;
+            } else if(action === 'max') {
+                STATE.sessions[idx].max = !STATE.sessions[idx].max;
+                STATE.sessions[idx].min = false;
+            }
+
+            saveState();
+            renderSessions();
+            haptic();
+        }
+
+        // AI Artemis Integration
+        async function generateInsight() {
+            const status = document.getElementById('ai-status');
+            if(!STATE.config.apiKey) {
+                status.innerHTML = '<span style="color:var(--danger)">Configure sua API Key nas configurações.</span>';
+                return;
+            }
+
+            status.innerHTML = '<span class="spinner"></span> Consultando Artemis Neural...';
+            
+            try {
+                const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${STATE.config.apiKey}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: STATE.config.model,
+                        messages: [
+                            { role: "system", content: "Você é Artemis, IA tática imobiliária de Sorocaba/SP. Responda em 2 frases curtas e objetivas sobre leads ou VGV." },
+                            { role: "user", content: `Insight para ${STATE.config.user}. O mercado está com VGV de 14.8M.` }
+                        ]
+                    })
+                });
+
+                const data = await response.json();
+                status.innerText = data.choices[0]?.message?.content || "Artemis offline. Tente novamente.";
+                haptic();
+            } catch (e) {
+                status.innerText = "Erro na conexão neural. Verifique sua chave.";
+            }
+        }
+
+        // Utils
+        function saveState() {
+            localStorage.setItem('monolith_sessions', JSON.stringify(STATE.sessions));
+        }
+
+        function saveSettings() {
+            STATE.config.apiKey = document.getElementById('api-key').value;
+            STATE.config.model = document.getElementById('api-model').value;
+            STATE.config.user = document.getElementById('user-name').value;
+            localStorage.setItem('monolith_config', JSON.stringify(STATE.config));
+            updateIdentity();
+            alert("Sincronização concluída.");
+            haptic();
+        }
+
+        function toggleSolar() {
+            STATE.config.theme = STATE.config.theme === 'day' ? 'night' : 'day';
+            localStorage.setItem('monolith_config', JSON.stringify(STATE.config));
+            applyTheme(STATE.config.theme);
+            haptic();
+        }
+
+        function applyTheme(theme) {
+            if(theme === 'day') document.body.classList.add('solar-day');
+            else document.body.classList.remove('solar-day');
+        }
+
+        function haptic() {
+            if(window.navigator.vibrate) window.navigator.vibrate(15);
+        }
+
+        window.onload = init;
+    </script></body></html>
