@@ -1,0 +1,541 @@
+<html lang="pt-BR"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>KOBLLUX ∆³ · Monólito Dual</title>
+    
+    <!-- Ícones e Fontes Integradas -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&amp;family=Orbitron:wght@500;700&amp;family=JetBrains+Mono&amp;display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Matriz de Cores Unificada (Nebula Pro + Madeira base) */
+            --bg-main: radial-gradient(circle at top, #181c3a 0%, #050816 40%, #010208 100%);
+            --surface: rgba(15, 23, 42, 0.7);
+            --surface-bright: rgba(30, 41, 59, 0.85);
+            --card-bg: rgba(10, 15, 32, 0.72);
+            --border-soft: rgba(151, 177, 255, 0.25);
+            
+            --secondary: #4fd4ff; /* Accent Blue */
+            --accent-orange: #ff9a3c;
+            --success: #10b981;
+            --danger: #ef4444;
+            --mut: #94a3b8;
+            --text-main: #f7f8ff;
+            --text-strong: #ffe0b0;
+            
+            /* Física e Geometria */
+            --r: 22px;
+            --blur: blur(16px) saturate(180%);
+            --tabsH: 80px;
+            --cardGlow: 0 0 22px rgba(79, 212, 255, 0.15), 0 0 60px rgba(255, 154, 60, 0.08);
+            
+            --z-base: 0; --z-content: 100; --z-widget: 500; --z-overlay: 1000; --z-system: 5000;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; margin: 0; padding: 0; }
+        
+        html, body { 
+            height: 100%; width: 100%;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            color: var(--text-main); 
+            background: var(--bg-main);
+            background-attachment: fixed;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Estrutura Principal */
+        #app-container { height: 100%; display: flex; flex-direction: column; position: relative; }
+        #viewport { flex: 1; overflow-y: auto; padding: 20px; scroll-behavior: smooth; padding-bottom: 140px; }
+
+        .view { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .hidden { display: none !important; }
+
+        /* HEADER MONOLITH */
+        header.vision-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-bottom: 20px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .vision-brand { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 1.2rem; letter-spacing: 2px; text-shadow: 0 0 10px rgba(79, 212, 255, 0.5); }
+        .vision-brand span { color: var(--secondary); font-weight: 400; font-size: 0.8rem; margin-left: 6px; }
+
+        /* TIMELINE WIDGET (AppLivs Fusion) */
+        .timeline-container {
+            position: relative; padding: 12px 16px; margin-bottom: 24px;
+            background: rgba(0,0,0,0.3); border-radius: var(--r); border: 1px solid var(--border-soft);
+        }
+        .timeline-track { width: 100%; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; position: relative; margin: 10px 0; }
+        .timeline-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--secondary); box-shadow: 0 0 10px var(--secondary); border-radius: 2px; width: 45%; }
+        .timeline-nodes { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--mut); font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+
+        /* ACTION CARDS (AppLivs Fusion) */
+        .actions-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 30px; }
+        @media(min-width: 600px) { .actions-grid { grid-template-columns: repeat(2, 1fr); } }
+        
+        .action-card {
+            background: var(--card-bg); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+            border: 1px solid var(--border-soft); border-radius: 16px; padding: 18px;
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; transition: 0.3s ease; box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+        .action-card:hover { transform: translateY(-3px); border-color: var(--secondary); box-shadow: 0 8px 30px rgba(79, 212, 255, 0.2); }
+        .action-label { font-size: 1rem; font-weight: 400; color: var(--text-main); }
+        .action-label span { font-weight: 800; color: var(--text-strong); }
+        .chevron { color: var(--secondary); font-size: 1.2rem; font-weight: bold; }
+
+        /* VOICE SPECTRUM (AppLivs Fusion) */
+        .voice-strip {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 154, 60, 0.1); border: 1px solid rgba(255, 154, 60, 0.3);
+            border-radius: 12px; padding: 12px 18px; margin-bottom: 30px;
+        }
+        .voice-label { font-size: 0.85rem; font-weight: 800; color: var(--accent-orange); text-transform: uppercase; letter-spacing: 1px; }
+        .voice-spectrum { display: flex; gap: 4px; align-items: flex-end; height: 18px; }
+        .bar { width: 3px; background: var(--accent-orange); border-radius: 2px; animation: eq 1s ease-in-out infinite alternate; }
+        .bar:nth-child(1) { height: 40%; animation-delay: 0.1s; } .bar:nth-child(2) { height: 80%; animation-delay: 0.3s; }
+        .bar:nth-child(3) { height: 60%; animation-delay: 0.5s; } .bar:nth-child(4) { height: 100%; animation-delay: 0.2s; }
+        .bar:nth-child(5) { height: 50%; animation-delay: 0.4s; }
+        @keyframes eq { 0% { transform: scaleY(0.3); } 100% { transform: scaleY(1); } }
+
+        /* ARQUÉTIPOS GRID */
+        .kobllux-title { text-align: center; font-size: 1.1rem; letter-spacing: 0.12em; color: var(--secondary); text-shadow: 0 0 15px var(--secondary); margin: 0 0 20px 0; font-family: 'Orbitron', sans-serif; }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+        @media(min-width: 600px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+        @media(min-width: 960px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+
+        .card {
+            background: var(--card-bg); backdrop-filter: var(--blur); border-radius: var(--r);
+            padding: 22px 18px; border: 1px solid var(--border-soft); box-shadow: var(--cardGlow);
+            display: flex; flex-direction: column; gap: 14px; position: relative; overflow: hidden;
+            transition: 0.25s ease;
+        }
+        .card:hover { transform: translateY(-5px); border-color: rgba(255,255,255,0.4); }
+        .card::before { content: ""; position: absolute; inset: -50%; background: radial-gradient(circle at top, var(--c) 25%, transparent 60%); opacity: 0.12; mix-blend-mode: screen; pointer-events: none; transition: 0.3s; }
+        .card:hover::before { opacity: 0.3; }
+
+        /* THE ORB (Reused in Dock) */
+        .orb {
+            border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.9) 0%, var(--c) 40%, rgba(0,0,0,0.8) 100%);
+            border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 0 20px var(--c); color: #000; font-weight: 800;
+        }
+        .card .orb { width: 72px; height: 72px; }
+        .ascii { font-family: 'JetBrains Mono', monospace; line-height: 1.1; }
+        .card .ascii { font-size: 1.15rem; }
+
+        .name { text-align: center; font-size: 1.1rem; letter-spacing: 0.16em; font-weight: 700; text-transform: uppercase; }
+        .code { text-align: center; font-size: 0.85rem; opacity: 0.82; letter-spacing: 0.12em; font-family: 'JetBrains Mono', monospace; }
+
+        .btnRow { display: flex; justify-content: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        .card-btn {
+            border-radius: 99px; padding: 8px 14px; border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.04); color: var(--text-main); font-size: 0.75rem;
+            font-weight: 600; cursor: pointer; transition: 0.2s ease; display: flex; align-items: center; gap: 6px;
+        }
+        .card-btn:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
+        .card-btn.primary { border-color: var(--c); color: var(--c); background: rgba(0,0,0,0.3); }
+        .card-btn.primary:hover { background: var(--c); color: #000; }
+
+        /* STACK (Window System) */
+        .session-window {
+            background: #000; border: 1px solid var(--border-soft); border-radius: 16px; margin-bottom: 20px;
+            overflow: hidden; display: flex; flex-direction: column; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .session-window.collapsed { height: 50px !important; }
+        .session-window.maximized { position: fixed; inset: 0; z-index: var(--z-system); border-radius: 0; margin: 0; }
+        .win-hdr {
+            padding: 12px 18px; background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: space-between; cursor: pointer;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .win-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+        .win-controls { display: flex; gap: 8px; }
+        .win-controls button {
+            width: 28px; height: 28px; border-radius: 50%; border: 0; background: rgba(255,255,255,0.08); color: white; cursor: pointer; font-size: 10px; transition: 0.2s;
+        }
+        .win-controls button:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); }
+        .win-controls button.close:hover { background: var(--danger); }
+        .win-content-mock { flex: 1; background: #050812; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; height: 500px; }
+
+        /* DOCK (Minimized Apps - THE ORBS) */
+        #dock {
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 12px; padding: 12px 20px; border-radius: 40px;
+            background: rgba(10, 15, 32, 0.85); border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px); box-shadow: 0 10px 40px rgba(0,0,0,0.8); z-index: var(--z-overlay);
+            transition: 0.3s;
+        }
+        #dock:empty { opacity: 0; transform: translate(-50%, 20px) scale(0.9); pointer-events: none; }
+        
+        /* THE DOCK ORB (Miniatura perfeita) */
+        .dock-orb-wrapper {
+            cursor: pointer; transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .dock-orb-wrapper .orb { width: 44px; height: 44px; border-width: 1px; }
+        .dock-orb-wrapper .ascii { font-size: 0.75rem; }
+        .dock-orb-wrapper:hover { transform: translateY(-8px) scale(1.1); }
+        .dock-orb-indicator { width: 4px; height: 4px; border-radius: 50%; background: #fff; margin-top: 6px; opacity: 0.5; }
+        .dock-orb-wrapper:hover .dock-orb-indicator { opacity: 1; box-shadow: 0 0 8px #fff; }
+
+        /* BOTTOM NAVIGATION */
+        .nav-bar {
+            position: fixed; bottom: 0; left: 0; right: 0; height: var(--tabsH);
+            background: rgba(5, 8, 15, 0.85); backdrop-filter: blur(25px);
+            border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-around; align-items: center; z-index: var(--z-system);
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--mut); cursor: pointer; font-size: 10px; font-weight: 700; transition: 0.3s; width: 80px; }
+        .nav-item.active { color: var(--secondary); text-shadow: 0 0 10px rgba(79, 212, 255, 0.4); }
+        .nav-item i { font-size: 20px; }
+
+        /* FLOATING ORB & VAULT MODAL (oiDual Fusion) */
+        .floating-orb {
+            position: fixed; bottom: 95px; right: 20px; width: 56px; height: 56px;
+            border-radius: 50%; background: radial-gradient(circle at 30% 20%, #ff9a3c, #8a2be2);
+            border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 0 25px rgba(255, 154, 60, 0.4);
+            display: grid; place-items: center; font-size: 24px; cursor: pointer; z-index: var(--z-overlay);
+            animation: floatOrb 3s ease-in-out infinite alternate;
+        }
+        @keyframes floatOrb { from { transform: translateY(0); } to { transform: translateY(-8px); box-shadow: 0 10px 30px rgba(255, 154, 60, 0.6); } }
+        
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+            z-index: 9999; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .keys-card {
+            background: var(--card-bg); border: 1px solid var(--border-soft); border-radius: 20px;
+            padding: 30px 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            transform: translateY(20px) scale(0.95); transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .modal-overlay.active .keys-card { transform: translateY(0) scale(1); }
+        .vault-icon { margin-bottom: 15px; color: var(--accent-orange); filter: drop-shadow(0 0 10px var(--accent-orange)); }
+        .cyber-input {
+            width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--border-soft); border-radius: 10px;
+            padding: 12px; color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 1rem; margin-bottom: 20px;
+        }
+        .cyber-input:focus { border-color: var(--secondary); box-shadow: 0 0 15px rgba(79, 212, 255, 0.2); }
+
+        /* TERMINAL */
+        #terminal { font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.6; color: var(--success); background: rgba(0,0,0,0.6); padding: 20px; border-radius: 16px; height: calc(100vh - 220px); overflow-y: auto; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .log-entry { margin-bottom: 6px; border-bottom: 1px solid rgba(16, 185, 129, 0.1); padding-bottom: 4px; }
+        .log-time { color: var(--mut); margin-right: 8px; font-size: 10px;}
+
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+    </style>
+<style>
+        :root {
+          --z-base: 0;
+          --z-content: 100;
+          --z-widget: 500;
+          --z-overlay: 1000;
+          --z-system: 5000;
+        }
+      </style><link rel="stylesheet" href="https://kodux78k.github.io/oiDual--Y-/css/mainFS.css"><link rel="stylesheet" href="https://kodux78k.github.io/oiDual--Y-/css/mainFSm.css">
+
+<button id="add">➕ Abrir App</button>
+
+<div id="stackWrap"></div>
+
+<link rel="stylesheet" href="https://kodux78k.github.io/oiDual--Y-/css/mainFSm.css">
+
+<script src="https://kodux78k.github.io/oiDual--Y-/js/oiFS.js"></script>
+
+
+<script src="https://kodux78k.github.io/oiDual--Y-/js/oiFSm.js"></script>
+
+
+</head>
+<body>
+
+    <div id="app-container">
+        <div id="viewport">
+            
+            <!-- VIEW: HOME (Fusão AppLivs + Monolith) -->
+            <section id="view-home" class="view">
+                <header class="vision-header">
+                    <div class="vision-brand">MONOLITH<span>DUAL V5</span></div>
+                    <div style="font-size: 10px; font-weight: 800; color: var(--secondary); letter-spacing: 1px;"><i data-lucide="activity" style="width:12px; display:inline-block"></i> SYS.ONLINE</div>
+                </header>
+
+                <!-- Timeline / Ciclo -->
+                <div class="timeline-container">
+                    <div class="timeline-nodes"><span>06:00</span><span>CICLO ATUAL</span><span>23:00</span></div>
+                    <div class="timeline-track"><div class="timeline-fill" id="time-bar"></div></div>
+                </div>
+
+                <!-- Action Cards -->
+                <section class="actions-grid">
+                    <div class="action-card" onclick="log('Acessando Insights Diários...')">
+                        <span class="action-label">Ver <span>insights</span> do dia</span>
+                        <span class="chevron"><i data-lucide="chevron-right"></i></span>
+                    </div>
+                    <div class="action-card" onclick="log('Acessando Documentos...')">
+                        <span class="action-label">Meus <span>documentos</span></span>
+                        <span class="chevron"><i data-lucide="chevron-right"></i></span>
+                    </div>
+                </section>
+
+                <!-- Voice Strip -->
+                <section class="voice-strip">
+                    <span class="voice-label"><i data-lucide="mic" style="width:14px; vertical-align:text-bottom; margin-right:4px"></i> Voz ao vivo</span>
+                    <div class="voice-spectrum">
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    </div>
+                </section>
+
+                <h1 class="kobllux-title"><i data-lucide="hexagon" style="width:18px; display:inline-block; vertical-align:text-bottom"></i> 12 ARQUÉTIPOS KOBLLUX</h1>
+
+                <!-- A Grade Geométrica -->
+                <div class="grid" id="archetypes-grid"></div>
+            </section>
+
+            <!-- VIEW: STACK -->
+            <section id="view-stack" class="view hidden">
+                <header class="vision-header">
+                    <div class="vision-brand">PROCESS<span>STACK</span></div>
+                    <button onclick="clearAll()" style="background:rgba(239, 68, 68, 0.1); border:1px solid var(--danger); color:var(--danger); border-radius:8px; font-size:10px; font-weight:bold; padding:6px 12px; cursor:pointer;">
+                        KILL ALL
+                    </button>
+                </header>
+                <div id="stack-container"></div>
+            </section>
+
+            <!-- VIEW: LOGS -->
+            <section id="view-logs" class="view hidden">
+                <header class="vision-header"><div class="vision-brand">SYSTEM<span>LOGS</span></div></header>
+                <div id="terminal"></div>
+            </section>
+
+        </div>
+
+        <!-- O DOCK COM ORBS GEOMÉTRICOS MINIMIZADOS -->
+        <div id="dock"></div>
+
+        <!-- ORB FLUTUANTE (VAULT TRIGGER) -->
+        <div class="floating-orb" onclick="toggleVault(true)">
+            <i data-lucide="fingerprint" style="color:#000; width:30px; height:30px;"></i>
+        </div>
+
+        <!-- VAULT MODAL -->
+        <div id="vaultModal" class="modal-overlay">
+            <div class="keys-card">
+                <div class="vault-icon"><i data-lucide="lock" style="width:40px;height:40px"></i></div>
+                <h3 style="margin:0 0 10px 0;font-weight:800;font-family:'Orbitron',sans-serif;">ACESSO AO COFRE</h3>
+                <p style="margin:0 0 20px 0;font-size:0.85rem;color:rgba(255,255,255,0.6)">Desbloqueie para acessar a criptografia matriz.</p>
+                <input type="password" id="vaultPass" class="cyber-input" style="text-align:center" placeholder="••••••••">
+                <div style="display:flex;gap:10px;justify-content:center">
+                    <button class="card-btn" onclick="toggleVault(false)">Cancelar</button>
+                    <button class="card-btn primary" style="--c: var(--accent-orange)" onclick="unlockVault()">Desbloquear</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTTOM NAV -->
+        <nav class="nav-bar">
+            <div class="nav-item active" onclick="switchView('home', this)"><i data-lucide="layout-grid"></i><span>HOME</span></div>
+            <div class="nav-item" onclick="switchView('stack', this)"><i data-lucide="layers"></i><span>STACK</span></div>
+            <div class="nav-item" onclick="switchView('terminal', this)"><i data-lucide="terminal-square"></i><span>LOGS</span></div>
+        </nav>
+    </div>
+
+    <script>
+        // Inicializa Ícones Lucide
+        lucide.createIcons();
+
+        const ARQUETIPOS = [
+            { id: 'atlas', name: 'ATLAS', code: '⚙ ATLAS ╔╗╔', ascii: '(⌐■_■)', color: '#7ef9c4', icon: 'hexagon' },
+            { id: 'nova', name: 'NOVA', code: '✧ NOVA █▄█', ascii: '(☆‿☆)', color: '#ffe986', icon: 'star' },
+            { id: 'vitalis', name: 'VITALIS', code: '🔥 VITALIS ░█▀▄', ascii: '(ง •̀_•́)ง', color: '#ff6b6b', icon: 'flame' },
+            { id: 'pulse', name: 'PULSE', code: '🎶 PULSE ₪₪₪', ascii: '(♥‿♥)', color: '#7dd3ff', icon: 'activity' },
+            { id: 'artemis', name: 'ARTEMIS', code: '🏹 ARTEMIS >><<', ascii: '(⇣‿⇡)', color: '#ffd1a3', icon: 'crosshair' },
+            { id: 'serena', name: 'SERENA', code: '♥ SERENA ★彡', ascii: '(˘︶˘)', color: '#ff9ad5', icon: 'leaf' },
+            { id: 'kaos', name: 'KAOS', code: '⚡ KAOS ╬╬╬', ascii: '(ಠ_ಠ)', color: '#ffef5a', icon: 'zap' },
+            { id: 'genus', name: 'GENUS', code: '🧩 GENUS ▓▓▓', ascii: '(•‿•)', color: '#c792ff', icon: 'puzzle' },
+            { id: 'lumine', name: 'LUMINE', code: '🌅 LUMINE ✧✧✧', ascii: '(^‿^)', color: '#ffa95b', icon: 'sun' },
+            { id: 'rhea', name: 'RHEA', code: '🌿 RHEA ⌘⌘⌘', ascii: '(❁‿❁)', color: '#8de48c', icon: 'sprout' },
+            { id: 'solus', name: 'SOLUS', code: '🕯 SOLUS ░░░', ascii: '(・・ )', color: '#f4d4ff', icon: 'eye' },
+            { id: 'aion', name: 'AION', code: '∞ AION ∞∞∞', ascii: '(∞‿∞)', color: '#9bf6ff', icon: 'infinity' }
+        ];
+
+        const state = { activeSessions: [], currentView: 'home' };
+
+        function log(msg) {
+            const term = document.getElementById('terminal');
+            const time = new Date().toLocaleTimeString('pt-BR', { hour12: false });
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-time">[${time}]</span> ${msg}`;
+            term.prepend(entry);
+        }
+
+        function switchView(viewId, navEl) {
+            document.querySelectorAll('.view').forEach(v => { v.classList.add('hidden'); v.style.animation = 'none'; v.offsetHeight; v.style.animation = null; });
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            navEl.classList.add('active');
+            state.currentView = viewId;
+            document.getElementById('viewport').scrollTop = 0;
+            log(`[SYS] Alterado para ${viewId.toUpperCase()}`);
+        }
+
+        function renderArchetypes() {
+            const container = document.getElementById('archetypes-grid');
+            ARQUETIPOS.forEach(arq => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style.setProperty('--c', arq.color);
+                card.innerHTML = `
+                    <div class="orb"><div class="ascii">${arq.ascii}</div></div>
+                    <div class="name" style="color: ${arq.color}; text-shadow: 0 0 10px ${arq.color}88">${arq.name}</div>
+                    <div class="code">${arq.code}</div>
+                    <div class="btnRow">
+                        <button class="card-btn primary" onclick="openSession('${arq.id}')"><i data-lucide="terminal" style="width:14px"></i> INICIAR</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        function openSession(id) {
+            const arq = ARQUETIPOS.find(a => a.id === id);
+            const existing = state.activeSessions.find(s => s.id === id);
+            
+            if(existing) {
+                existing.status = 'active';
+                log(`[SYS] Processo restaurado: ${arq.name}`);
+            } else {
+                const sid = 'proc_' + Math.random().toString(36).substr(2, 9);
+                state.activeSessions.push({ ...arq, sid, status: 'active', height: 450 });
+                log(`[KOBLLUX] Arquétipo convocado: ${arq.name} (PID: ${sid})`);
+            }
+            renderStack();
+            switchView('stack', document.querySelectorAll('.nav-item')[1]);
+        }
+
+        function renderStack() {
+            const container = document.getElementById('stack-container');
+            if (state.activeSessions.length === 0) {
+                container.innerHTML = `<div style="text-align:center;opacity:0.3;padding:60px 20px;"><i data-lucide="ghost" style="width:40px;height:40px;margin-bottom:15px"></i><p style="font-family:'JetBrains Mono'">Sistema Vazio.</p></div>`;
+                lucide.createIcons();
+                renderDock();
+                return;
+            }
+
+            container.innerHTML = '';
+            state.activeSessions.forEach(session => {
+                if (session.status === 'minimized') return;
+
+                const win = document.createElement('div');
+                win.className = `session-window ${session.status === 'maximized' ? 'maximized' : ''}`;
+                win.id = session.sid;
+                win.style.height = session.status === 'maximized' ? '100%' : `${session.height}px`;
+                win.style.borderColor = session.color;
+                win.style.boxShadow = `0 10px 30px rgba(0,0,0,0.5), 0 0 15px ${session.color}33`;
+
+                win.innerHTML = `
+                    <div class="win-hdr">
+                        <div class="win-title" style="color: ${session.color}"><i data-lucide="${session.icon}" style="width:14px"></i> ${session.name} :: CONSOLE</div>
+                        <div class="win-controls">
+                            <button onclick="minimizeApp('${session.sid}')" title="Minimizar"><i data-lucide="minus" style="width:12px"></i></button>
+                            <button onclick="maximizeApp('${session.sid}')" title="Maximizar"><i data-lucide="maximize-2" style="width:12px"></i></button>
+                            <button class="close" onclick="closeApp('${session.sid}')" title="Fechar"><i data-lucide="x" style="width:12px"></i></button>
+                        </div>
+                    </div>
+                    <div class="win-content-mock">
+                        <div class="orb" style="margin-bottom:20px; box-shadow:0 0 30px ${session.color}; --c:${session.color}">
+                            <div class="ascii">${session.ascii}</div>
+                        </div>
+                        <h2 style="color:${session.color}; font-family:'Orbitron'; margin-bottom:10px;">SINTONIA ATIVA</h2>
+                        <p style="font-family:'JetBrains Mono'; opacity:0.7; font-size:12px;">Frequência: ${session.code}</p>
+                    </div>
+                `;
+                container.appendChild(win);
+            });
+            lucide.createIcons();
+            renderDock();
+        }
+
+        function minimizeApp(sid) {
+            const s = state.activeSessions.find(x => x.sid === sid);
+            if (s) { s.status = 'minimized'; log(`[SYS] Minimizado: ${s.name}`); renderStack(); }
+        }
+        function maximizeApp(sid) {
+            const s = state.activeSessions.find(x => x.sid === sid);
+            if (s) { s.status = s.status === 'maximized' ? 'active' : 'maximized'; renderStack(); }
+        }
+        function closeApp(sid) {
+            const s = state.activeSessions.find(x => x.sid === sid);
+            if (s) { state.activeSessions = state.activeSessions.filter(x => x.sid !== sid); log(`[SYS] Processo Encerrado: ${s.name}`); renderStack(); }
+        }
+        function clearAll() { state.activeSessions = []; log("[SYS] KILL ALL executado."); renderStack(); }
+
+        /* O CORE DO PEDIDO: DOCK RENDERIZANDO OS ORBS IDÊNTICOS */
+        function renderDock() {
+            const dock = document.getElementById('dock');
+            dock.innerHTML = '';
+            const minimized = state.activeSessions.filter(s => s.status === 'minimized');
+            
+            minimized.forEach(s => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'dock-orb-wrapper';
+                wrapper.title = s.name;
+                wrapper.onclick = () => { s.status = 'active'; renderStack(); };
+                
+                // Recriando a geometria exata do Orb do Arquétipo, mas em escala reduzida
+                wrapper.innerHTML = `
+                    <div class="orb" style="--c: ${s.color};">
+                        <div class="ascii" style="color:#000;">${s.ascii}</div>
+                    </div>
+                    <div class="dock-orb-indicator" style="background:${s.color}"></div>
+                `;
+                dock.appendChild(wrapper);
+            });
+        }
+
+        // Vault Logic
+        function toggleVault(show) {
+            const modal = document.getElementById('vaultModal');
+            if(show) {
+                modal.classList.add('active');
+                document.getElementById('vaultPass').focus();
+                log("[SEC] Tentativa de acesso ao Cofre Central.");
+            } else {
+                modal.classList.remove('active');
+                document.getElementById('vaultPass').value = '';
+            }
+        }
+        function unlockVault() {
+            const val = document.getElementById('vaultPass').value;
+            if(val) {
+                log(`[SEC] Cofre desbloqueado com sucesso.`);
+                toggleVault(false);
+            } else {
+                log(`[SEC] ERRO: Senha em branco.`);
+            }
+        }
+
+        // Init
+        window.onload = () => {
+            log("[0x00] Sistema Geométrico Inicializado.");
+            log("[0x06] Fusão Dual Monolith-AppLivs completa.");
+            
+            // Set Timeline based on hours
+            const now = new Date();
+            const h = now.getHours() + now.getMinutes() / 60;
+            const pct = Math.max(0, Math.min(100, ((h - 6) / (23 - 6)) * 100));
+            document.getElementById('time-bar').style.width = `${pct}%`;
+
+            renderArchetypes();
+            renderStack();
+        };
+    </script>
+
+
+
+<script src="https://kodux78k.github.io/oiDual--Y-/js/oiFS.js"></script><script src="https://kodux78k.github.io/oiDual--Y-/js/oiFSm.js"></script></body></html>

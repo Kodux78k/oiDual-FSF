@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>UNO — Monólito Dual V5 — KODUX</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&amp;family=Orbitron:wght@500;700&amp;family=JetBrains+Mono&amp;display=swap" rel="stylesheet">
+    
+<link rel="stylesheet" href="https://kodux78k.github.io/oiDual--Y-/css/mainFS.css"><link rel="stylesheet" href="https://kodux78k.github.io/oiDual--Y-/css/mainFSm.css">
+
+<link rel="stylesheet" href="./css/main.css"></head><body><button id="add">➕ Abrir App</button>
+
+<div id="stackWrap"></div>
+
+<link rel="stylesheet" href="https://kodux78k.github.io/oiDual--Y-/css/mainFSm.css">
+
+
+
+
+
+
+
+
+
+
+    <div id="app-container">
+        
+        <div id="viewport">
+            
+            <!-- HOME VIEW -->
+            <section id="view-home" class="view">
+                <header class="vision-header">
+                    <div class="vision-brand">MONOLITH<span>DUAL V5</span></div>
+                    <div style="font-size: 10px; font-weight: 800; color: var(--secondary)">KODUX NODE 01</div>
+                </header>
+
+                <div class="glass-card" style="border-left: 4px solid var(--secondary);">
+                    <div style="display:flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 10px; opacity: 0.5; letter-spacing: 1px; margin-bottom: 4px;">KERNEL STATUS</div>
+                            <div style="font-size: 14px; font-weight: 800;">Trinity Engine: Active</div>
+                        </div>
+                        <div class="ai-orb"></div>
+                    </div>
+                </div>
+
+                <div class="apps-grid" id="apps-container">
+                    <!-- Gerado via JS -->
+                </div>
+            </section>
+
+            <!-- STACK VIEW -->
+            <section id="view-stack" class="view hidden">
+                <header class="vision-header">
+                    <div class="vision-brand">PROCESS<span>STACK</span></div>
+                    <button onclick="clearAll()" style="background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:6px; font-size:10px; padding:4px 8px; cursor:pointer;">KILL ALL</button>
+                </header>
+                <div id="stack-container">
+                    <div style="text-align: center; opacity: 0.3; padding: 40px;">
+                        <i class="fa-solid fa-layer-group" style="font-size: 30px; margin-bottom: 10px;"></i>
+                        <p style="font-size: 12px;">Nenhum processo no monólito.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- LOGS VIEW -->
+            <section id="view-logs" class="view hidden">
+                <header class="vision-header">
+                    <div class="vision-brand">SYSTEM<span>LOGS</span></div>
+                </header>
+                <div id="terminal">
+                    <div>[00:00:01] Initializing Monolith Kernel...</div>
+                    <div>[00:00:02] Dual Trinity V5 Protocol engaged.</div>
+                    <div>[00:00:03] Node: Sorocaba/SP connected.</div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- DOCK -->
+        <div id="dock"></div>
+
+        <!-- NAVIGATION -->
+        <nav class="nav-bar">
+            <div class="nav-item active" onclick="switchView('home', this)">
+                <i class="fa-solid fa-grip"></i>
+                <span>HOME</span>
+            </div>
+            <div class="nav-item" onclick="switchView('stack', this)">
+                <i class="fa-solid fa-ghost"></i>
+                <span>STACK</span>
+            </div>
+            <div class="nav-item" onclick="switchView('logs', this)">
+                <i class="fa-solid fa-terminal"></i>
+                <span>LOGS</span>
+            </div>
+        </nav>
+
+    </div>
+
+    
+
+
+
+<script type="module" src="./js/main.js"></script></body></html>

@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>KOBLLUX — Monólito Dual V5 — KODUX</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Monolith Base Variables */
+            --bg: radial-gradient(circle at top, #1a102f 0%, #060613 40%, #010208 100%);
+            --surface: rgba(15, 23, 42, 0.7);
+            --surface-bright: rgba(30, 41, 59, 0.85);
+            --panel: rgba(10, 10, 20, 0.72);
+            --border: rgba(160, 190, 255, 0.25);
+            
+            /* Accents */
+            --secondary: #00f2ff;
+            --success: #10b981;
+            --danger: #ef4444;
+            --mut: #94a3b8;
+            --fg: #eef;
+            
+            /* Physics */
+            --r: 22px;
+            --blur: blur(16px) saturate(180%);
+            --tabsH: 80px;
+            --shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+            --cardGlow: 0 0 22px rgba(0, 255, 255, 0.15), 0 0 60px rgba(255, 0, 255, 0.08);
+            
+            /* Z-Index Hierarchy */
+            --z-base: 0;
+            --z-content: 100;
+            --z-widget: 500;
+            --z-overlay: 1000;
+            --z-system: 5000;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; margin: 0; padding: 0; }
+        
+        html, body { 
+            height: 100%; width: 100%;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            color: var(--fg); 
+            background: var(--bg);
+            background-attachment: fixed;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Principal Layout Container */
+        #app-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Scrollable Viewport */
+        #viewport {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            scroll-behavior: smooth;
+            padding-bottom: 140px; /* Space for dock & nav */
+        }
+
+        /* View Animations */
+        .view { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(15px) scale(0.98); } 
+            to { opacity: 1; transform: translateY(0) scale(1); } 
+        }
+        .hidden { display: none !important; }
+
+        /* UI Headers */
+        header.vision-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-bottom: 25px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .vision-brand {
+            font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 1.2rem;
+            letter-spacing: 2px; text-shadow: 0 0 10px rgba(0,242,255,0.5);
+        }
+        .vision-brand span { color: var(--secondary); font-weight: 400; font-size: 0.8rem; margin-left: 6px; }
+
+        /* Kernel Status Card */
+        .glass-card {
+            background: var(--panel);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--secondary);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        .ai-orb {
+            width: 14px; height: 14px; border-radius: 50%;
+            background: var(--secondary);
+            box-shadow: 0 0 15px var(--secondary), 0 0 30px #0066ff;
+            animation: pulse 2s infinite alternate;
+        }
+        @keyframes pulse { from { opacity: 0.6; transform: scale(0.9); } to { opacity: 1; transform: scale(1.1); } }
+
+        /* --- KOBLLUX ARCHETYPES GRID --- */
+        .kobllux-title {
+            text-align: center; font-size: 1.2rem; letter-spacing: 0.12em;
+            color: #0ff; text-shadow: 0 0 18px #0ff8;
+            margin: 30px 0 20px 0; font-family: 'Orbitron', sans-serif;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        @media(min-width: 600px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+        @media(min-width: 960px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+
+        .card {
+            background: var(--panel); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+            border-radius: var(--r); padding: 22px 18px; border: 1px solid var(--border);
+            box-shadow: var(--cardGlow);
+            display: flex; flex-direction: column; gap: 14px;
+            position: relative; overflow: hidden;
+            transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255,255,255,0.4);
+            box-shadow: 0 0 38px rgba(0,255,255,0.3), 0 0 80px rgba(255,0,255,0.2);
+        }
+
+        /* Specific Totem Colors injected via inline style --c */
+        .card::before {
+            content: ""; position: absolute; inset: -50%;
+            background: radial-gradient(circle at top, var(--c) 25%, transparent 60%);
+            opacity: 0.12; mix-blend-mode: screen; transition: .3s ease; pointer-events: none;
+        }
+        .card:hover::before { opacity: 0.3; inset: -30%; }
+
+        .orb {
+            width: 72px; height: 72px; border-radius: 50%; margin: 0 auto;
+            display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.9) 0%, var(--c) 40%, rgba(0,0,0,0.8) 100%);
+            border: 1px solid rgba(255,255,255,0.5);
+            box-shadow: 0 0 20px var(--c); color: #000; font-weight: 800;
+        }
+        .ascii { font-size: 1.15rem; line-height: 1.1; font-family: 'JetBrains Mono', monospace;}
+
+        .name { text-align: center; font-size: 1.1rem; letter-spacing: 0.16em; font-weight: 700; text-transform: uppercase; }
+        .code { text-align: center; font-size: 0.85rem; opacity: 0.82; letter-spacing: 0.12em; font-family: 'JetBrains Mono', monospace; }
+
+        .btnRow { display: flex; justify-content: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        .card-btn {
+            border-radius: 999px; padding: 8px 14px;
+            border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.04);
+            color: var(--fg); font-size: 0.75rem; letter-spacing: 0.08em; font-weight: 600;
+            cursor: pointer; transition: 0.2s ease; display: flex; align-items: center; gap: 6px;
+            backdrop-filter: blur(4px);
+        }
+        .card-btn:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .card-btn.primary { border-color: var(--c); color: var(--c); background: rgba(0,0,0,0.3); }
+        .card-btn.primary:hover { background: var(--c); color: #000; }
+
+        /* --- STACK (Window System) --- */
+        .session-window {
+            background: #000; border: 1px solid var(--border); border-radius: 16px;
+            margin-bottom: 20px; overflow: hidden; display: flex; flex-direction: column;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(0, 242, 255, 0.1);
+        }
+        .session-window.collapsed { height: 50px !important; }
+        .session-window.minimized { display: none; }
+        .session-window.maximized { position: fixed; inset: 0; z-index: var(--z-system); border-radius: 0; margin: 0; }
+
+        .win-hdr {
+            padding: 12px 18px; background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: space-between; cursor: pointer;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .win-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+        .win-controls { display: flex; gap: 8px; }
+        .win-controls button {
+            width: 28px; height: 28px; border-radius: 50%; border: 0;
+            background: rgba(255,255,255,0.08); color: white; cursor: pointer;
+            font-size: 10px; transition: 0.2s; display: grid; place-items: center;
+        }
+        .win-controls button:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); }
+        .win-controls button.close:hover { background: var(--danger); }
+
+        .win-frame { width: 100%; height: 500px; border: 0; background: #000; flex: 1; }
+        .win-content-mock {
+            flex: 1; background: #050812; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; height: 500px;
+        }
+
+        /* --- DOCK & NAVIGATION --- */
+        #dock {
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 10px; padding: 12px; border-radius: 40px;
+            background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6); z-index: var(--z-overlay);
+            transition: 0.3s;
+        }
+        #dock:empty { opacity: 0; transform: translate(-50%, 20px) scale(0.9); pointer-events: none; }
+        
+        .dock-bubble {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: var(--surface-bright); color: #fff;
+            display: grid; place-items: center; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+            transition: 0.2s; font-size: 18px;
+        }
+        .dock-bubble:hover { transform: translateY(-5px); background: var(--secondary); color: #000; box-shadow: 0 0 20px var(--secondary); border-color: var(--secondary); }
+
+        .nav-bar {
+            position: fixed; bottom: 0; left: 0; right: 0; height: var(--tabsH);
+            background: rgba(10, 15, 25, 0.75); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border-top: 1px solid rgba(255,255,255,0.08);
+            display: flex; justify-content: space-around; align-items: center;
+            padding-bottom: env(safe-area-inset-bottom); z-index: var(--z-system);
+        }
+
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            color: var(--mut); cursor: pointer; font-size: 10px; font-weight: 700;
+            transition: 0.3s; width: 80px; padding: 10px 0; border-radius: 12px;
+        }
+        .nav-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .nav-item.active { color: var(--secondary); text-shadow: 0 0 10px rgba(0,242,255,0.4); }
+        .nav-item.active i { transform: translateY(-2px); }
+        .nav-item i { font-size: 20px; transition: 0.3s; }
+
+        /* --- TERMINAL --- */
+        #terminal {
+            font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.6;
+            color: var(--success); background: rgba(0,0,0,0.6); padding: 20px;
+            border-radius: 16px; height: calc(100vh - 220px); overflow-y: auto;
+            border: 1px solid rgba(16, 185, 129, 0.3); backdrop-filter: blur(10px);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+        .log-entry { margin-bottom: 6px; border-bottom: 1px solid rgba(16, 185, 129, 0.1); padding-bottom: 4px; }
+        .log-time { color: var(--mut); margin-right: 8px; font-size: 10px;}
+        .log-sys { color: var(--secondary); font-weight: bold; margin-right: 8px;}
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        
+        <div id="viewport">
+            
+            <!-- HOME VIEW: KOBLLUX FUSION -->
+            <section id="view-home" class="view">
+                <header class="vision-header">
+                    <div class="vision-brand">MONOLITH<span>DUAL V5</span></div>
+                    <div style="font-size: 10px; font-weight: 800; color: var(--secondary); letter-spacing: 1px;">KODUX NODE 01</div>
+                </header>
+
+                <div class="glass-card">
+                    <div>
+                        <div style="font-size: 10px; opacity: 0.6; letter-spacing: 1.5px; margin-bottom: 6px;">KERNEL STATUS</div>
+                        <div style="font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-microchip" style="color: var(--secondary)"></i> Trinity Engine Active
+                        </div>
+                    </div>
+                    <div class="ai-orb"></div>
+                </div>
+
+                <h1 class="kobllux-title">⚡ KOBLLUX · FUSÃO DOS 12 ARQUÉTIPOS</h1>
+
+                <div class="grid" id="archetypes-grid">
+                    <!-- Gerado via JavaScript -->
+                </div>
+            </section>
+
+            <!-- STACK VIEW: SESSIONS -->
+            <section id="view-stack" class="view hidden">
+                <header class="vision-header">
+                    <div class="vision-brand">PROCESS<span>STACK</span></div>
+                    <button onclick="clearAll()" style="background:rgba(239, 68, 68, 0.1); border:1px solid var(--danger); color:var(--danger); border-radius:8px; font-size:10px; font-weight:bold; padding:6px 12px; cursor:pointer; letter-spacing: 1px; transition: 0.2s;">
+                        <i class="fa-solid fa-skull" style="margin-right: 4px;"></i> KILL ALL
+                    </button>
+                </header>
+                <div id="stack-container">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+
+            <!-- LOGS VIEW: TERMINAL -->
+            <section id="view-logs" class="view hidden">
+                <header class="vision-header">
+                    <div class="vision-brand">SYSTEM<span>LOGS</span></div>
+                </header>
+                <div id="terminal">
+                    <!-- Logs go here -->
+                </div>
+            </section>
+
+        </div>
+
+        <!-- MINIMIZED DOCK -->
+        <div id="dock"></div>
+
+        <!-- BOTTOM NAVIGATION -->
+        <nav class="nav-bar">
+            <div class="nav-item active" onclick="switchView('home', this)">
+                <i class="fa-solid fa-layer-group"></i>
+                <span>HOME</span>
+            </div>
+            <div class="nav-item" onclick="switchView('stack', this)">
+                <i class="fa-solid fa-ghost"></i>
+                <span>STACK</span>
+            </div>
+            <div class="nav-item" onclick="switchView('logs', this)">
+                <i class="fa-solid fa-terminal"></i>
+                <span>LOGS</span>
+            </div>
+        </nav>
+
+    </div>
+
+    <script>
+        // Data structure for the 12 Archetypes
+        const ARQUETIPOS = [
+            { id: 'atlas', name: 'ATLAS', code: '⚙ ATLAS ╔╗╔', ascii: '(⌐■_■)', color: '#7ef9c4', icon: 'fa-cube' },
+            { id: 'nova', name: 'NOVA', code: '✧ NOVA █▄█', ascii: '(☆‿☆)', color: '#ffe986', icon: 'fa-star' },
+            { id: 'vitalis', name: 'VITALIS', code: '🔥 VITALIS ░█▀▄', ascii: '(ง •̀_•́)ง', color: '#ff6b6b', icon: 'fa-fire' },
+            { id: 'pulse', name: 'PULSE', code: '🎶 PULSE ₪₪₪', ascii: '(♥‿♥)', color: '#7dd3ff', icon: 'fa-wave-square' },
+            { id: 'artemis', name: 'ARTEMIS', code: '🏹 ARTEMIS >><<', ascii: '(⇣‿⇡)', color: '#ffd1a3', icon: 'fa-location-crosshairs' },
+            { id: 'serena', name: 'SERENA', code: '♥ SERENA ★彡', ascii: '(˘︶˘)', color: '#ff9ad5', icon: 'fa-leaf' },
+            { id: 'kaos', name: 'KAOS', code: '⚡ KAOS ╬╬╬', ascii: '(ಠ_ಠ)', color: '#ffef5a', icon: 'fa-bolt' },
+            { id: 'genus', name: 'GENUS', code: '🧩 GENUS ▓▓▓', ascii: '(•‿•)', color: '#c792ff', icon: 'fa-puzzle-piece' },
+            { id: 'lumine', name: 'LUMINE', code: '🌅 LUMINE ✧✧✧', ascii: '(^‿^)', color: '#ffa95b', icon: 'fa-sun' },
+            { id: 'rhea', name: 'RHEA', code: '🌿 RHEA ⌘⌘⌘', ascii: '(❁‿❁)', color: '#8de48c', icon: 'fa-seedling' },
+            { id: 'solus', name: 'SOLUS', code: '🕯 SOLUS ░░░', ascii: '(・・ )', color: '#f4d4ff', icon: 'fa-eye' },
+            { id: 'aion', name: 'AION', code: '∞ AION ∞∞∞', ascii: '(∞‿∞)', color: '#9bf6ff', icon: 'fa-infinity' }
+        ];
+
+        // State Management
+        const state = {
+            activeSessions: [],
+            currentView: 'home'
+        };
+
+        // Core Functions
+        function log(msg, isSystem = false) {
+            const term = document.getElementById('terminal');
+            const time = new Date().toLocaleTimeString('pt-BR', { hour12: false });
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            
+            const sysTag = isSystem ? `<span class="log-sys">[SYS]</span>` : '';
+            entry.innerHTML = `<span class="log-time">[${time}]</span> ${sysTag}${msg}`;
+            
+            term.prepend(entry);
+        }
+
+        function switchView(viewId, navEl) {
+            // Hide all views
+            document.querySelectorAll('.view').forEach(v => {
+                v.classList.add('hidden');
+                v.style.animation = 'none'; // Reset animation
+                v.offsetHeight; /* trigger reflow */
+                v.style.animation = null; 
+            });
+            
+            // Show target
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+            
+            // Update Nav
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            navEl.classList.add('active');
+            state.currentView = viewId;
+            
+            log(`Viewport alternado para: ${viewId.toUpperCase()}`);
+            
+            // Scroll to top
+            document.getElementById('viewport').scrollTop = 0;
+        }
+
+        // Render Home Grid
+        function renderArchetypes() {
+            const container = document.getElementById('archetypes-grid');
+            container.innerHTML = '';
+            
+            ARQUETIPOS.forEach(arq => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style.setProperty('--c', arq.color);
+                
+                card.innerHTML = `
+                    <div class="orb"><div class="ascii">${arq.ascii}</div></div>
+                    <div class="name" style="color: ${arq.color}; text-shadow: 0 0 10px ${arq.color}88">${arq.name}</div>
+                    <div class="code">${arq.code}</div>
+                    <div class="btnRow">
+                        <button class="card-btn" onclick="copyAction(event, '${arq.code}', this)"><i class="fa-regular fa-clipboard"></i> Copiar</button>
+                        <button class="card-btn" onclick="shareAction(event, '${arq.code}', this)"><i class="fa-solid fa-share-nodes"></i> Share</button>
+                        <button class="card-btn primary" onclick="openSession(event, '${arq.id}')"><i class="fa-solid fa-terminal"></i> Abrir</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Interaction Functions
+        function copyAction(e, text, btn) {
+            e.stopPropagation();
+            
+            const performCopy = (str) => {
+                let textArea = document.createElement("textarea");
+                textArea.value = str;
+                textArea.style.position = "fixed";
+                textArea.style.opacity = "0";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    log(`Código copiado: ${text}`, true);
+                    btn.innerHTML = `<i class="fa-solid fa-check"></i> Copiado`;
+                    btn.style.borderColor = "var(--success)";
+                    btn.style.color = "var(--success)";
+                    setTimeout(() => {
+                        btn.innerHTML = `<i class="fa-regular fa-clipboard"></i> Copiar`;
+                        btn.style.borderColor = "";
+                        btn.style.color = "";
+                    }, 1500);
+                } catch (err) {
+                    log(`Falha ao copiar código: ${err}`);
+                }
+                document.body.removeChild(textArea);
+            };
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    log(`Código copiado via API moderna: ${text}`, true);
+                    btn.innerHTML = `<i class="fa-solid fa-check"></i> Copiado`;
+                    setTimeout(() => btn.innerHTML = `<i class="fa-regular fa-clipboard"></i> Copiar`, 1500);
+                }).catch(() => performCopy(text));
+            } else {
+                performCopy(text);
+            }
+        }
+
+        function shareAction(e, text, btn) {
+            e.stopPropagation();
+            if(navigator.share) {
+                navigator.share({
+                    title: 'Monólito KOBLLUX',
+                    text: text
+                }).then(() => log(`Shared: ${text}`));
+            } else {
+                copyAction(e, text, btn); // Fallback to copy
+            }
+        }
+
+        // Session Management (Stack)
+        function openSession(e, id) {
+            e.stopPropagation();
+            const arq = ARQUETIPOS.find(a => a.id === id);
+            
+            // Check if already open
+            const existing = state.activeSessions.find(s => s.id === id);
+            if(existing) {
+                existing.status = 'active';
+                renderStack();
+                switchView('stack', document.querySelectorAll('.nav-item')[1]);
+                log(`Sessão restaurada: ${arq.name}`, true);
+                return;
+            }
+
+            const sid = 'proc_' + Math.random().toString(36).substr(2, 9);
+            const session = { ...arq, sid, status: 'active', height: 450 };
+            state.activeSessions.push(session);
+            
+            log(`Iniciando processo [${arq.name}] - PID: ${sid}`, true);
+            renderStack();
+            switchView('stack', document.querySelectorAll('.nav-item')[1]);
+        }
+
+        function renderStack() {
+            const container = document.getElementById('stack-container');
+            
+            if (state.activeSessions.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; opacity: 0.3; padding: 60px 20px;">
+                        <i class="fa-solid fa-ghost" style="font-size: 40px; margin-bottom: 15px;"></i>
+                        <p style="font-size: 13px; font-family: 'JetBrains Mono', monospace;">Nenhum processo ativo no monólito.</p>
+                    </div>
+                `;
+                renderDock();
+                return;
+            }
+
+            container.innerHTML = '';
+            state.activeSessions.forEach(session => {
+                if (session.status === 'minimized') return;
+
+                const win = document.createElement('div');
+                win.className = `session-window ${session.status === 'maximized' ? 'maximized' : ''}`;
+                win.id = session.sid;
+                win.style.height = session.status === 'maximized' ? '100%' : `${session.height}px`;
+                win.style.borderColor = session.color;
+                win.style.boxShadow = `0 10px 30px rgba(0,0,0,0.5), 0 0 15px ${session.color}33`;
+
+                win.innerHTML = `
+                    <div class="win-hdr" onclick="toggleCollapse('${session.sid}')">
+                        <div class="win-title" style="color: ${session.color}">
+                            <i class="fa-solid ${session.icon}"></i>
+                            ${session.name} :: TERMINAL
+                        </div>
+                        <div class="win-controls" onclick="event.stopPropagation()">
+                            <button onclick="minimizeApp('${session.sid}')" title="Minimizar"><i class="fa-solid fa-minus"></i></button>
+                            <button onclick="maximizeApp('${session.sid}')" title="Maximizar"><i class="fa-solid fa-expand"></i></button>
+                            <button class="close" onclick="closeApp('${session.sid}')" title="Encerrar"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+                    <div class="win-content-mock">
+                        <div class="orb" style="margin-bottom: 20px; box-shadow: 0 0 30px ${session.color}; background: radial-gradient(circle, ${session.color} 0%, #000 80%)">
+                            <div class="ascii" style="color: #fff">${session.ascii}</div>
+                        </div>
+                        <h2 style="color: ${session.color}; font-family: 'Orbitron', sans-serif; margin-bottom: 10px;">CONEXÃO ESTABELECIDA</h2>
+                        <p style="font-family: 'JetBrains Mono', monospace; opacity: 0.7; font-size: 12px; margin-bottom: 20px;">
+                            Assinatura Genética: <span style="color:#fff">${session.code}</span><br>
+                            Status: <span style="color: var(--success)">Sincronizado</span>
+                        </p>
+                        <div style="width: 80%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+                             <div style="width: 100%; height: 100%; background: ${session.color}; animation: load 2s infinite ease-in-out;"></div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(win);
+            });
+            renderDock();
+        }
+
+        // Window Controls
+        function minimizeApp(sid) {
+            const s = state.activeSessions.find(x => x.sid === sid);
+            if (s) {
+                s.status = 'minimized';
+                log(`Processo minimizado: ${s.name}`, true);
+                renderStack();
+            }
+        }
+
+        function maximizeApp(sid) {
+            const s = state.activeSessions.find(x => x.sid === sid);
+            if (s) {
+                s.status = (s.status === 'maximized') ? 'active' : 'maximized';
+                renderStack();
+            }
+        }
+
+        function closeApp(sid) {
+            const s = state.activeSessions.find(x => x.sid === sid);
+            if (s) {
+                state.activeSessions = state.activeSessions.filter(x => x.sid !== sid);
+                log(`Sinal SIGKILL enviado. Processo encerrado: ${s.name}`, true);
+                renderStack();
+            }
+        }
+
+        function clearAll() {
+            if(state.activeSessions.length > 0) {
+                state.activeSessions = [];
+                log(`Limpeza Geral: Todos os processos foram aniquilados.`, true);
+                renderStack();
+            }
+        }
+
+        function toggleCollapse(sid) {
+            const win = document.getElementById(sid);
+            if (win && !win.classList.contains('maximized')) {
+                win.classList.toggle('collapsed');
+            }
+        }
+
+        // Render Dock (Minimized Items)
+        function renderDock() {
+            const dock = document.getElementById('dock');
+            dock.innerHTML = '';
+            const minimized = state.activeSessions.filter(s => s.status === 'minimized');
+            
+            minimized.forEach(s => {
+                const b = document.createElement('div');
+                b.className = 'dock-bubble';
+                b.innerHTML = `<i class="fa-solid ${s.icon}"></i>`;
+                b.style.color = s.color;
+                b.title = `Restaurar ${s.name}`;
+                b.onclick = () => {
+                    s.status = 'active';
+                    log(`Processo restaurado: ${s.name}`, true);
+                    renderStack();
+                };
+                dock.appendChild(b);
+            });
+        }
+
+        // Initialization
+        window.onload = () => {
+            log("Inicializando Kernel Monolith...", true);
+            log("Protocolo Dual Trinity V5 acionado.", true);
+            log("Módulos KOBLLUX carregados com sucesso.");
+            renderArchetypes();
+            renderStack();
+            
+            // CSS Animation specific to the mockup loading bar
+            const style = document.createElement('style');
+            style.innerHTML = `@keyframes load { 0% { transform: translateX(-100%); } 50% { transform: translateX(0); } 100% { transform: translateX(100%); } }`;
+            document.head.appendChild(style);
+        };
+    </script>
+</body>
+</html>
+
