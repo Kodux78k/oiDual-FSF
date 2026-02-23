@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>UNO — Monólito Dual V5 — KODUX</title>
+
+  <!-- Fonts & Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+
+  <!-- Main CSS (modular) -->
+  <link rel="stylesheet" href="https://kodux78k.github.io/oiDual-FSF/css/mainFSFb.css">
+
+  <!-- Optional external assets you used originally:
+       <link rel="stylesheet" href="https://kodux78k.github.io/oiDual--Y-/css/mainFS.css">
+       <link rel="stylesheet" href="https://kodux78k.github.io/oiDual--Y-/css/mainFSm.css">
+     Keep if needed, but load AFTER styles.css if they should override. -->
+</head>
+<body>
+  <div id="app-container">
+    <div id="viewport">
+
+      <!-- HOME VIEW -->
+      <section id="view-home" class="view">
+        <header class="vision-header">
+          <div class="vision-brand">MONOLITH<span>DUAL V5</span></div>
+          <div class="vision-meta">KODUX NODE 01</div>
+        </header>
+
+        <div class="glass-card card-status">
+          <div class="status-row">
+            <div>
+              <div class="status-label">KERNEL STATUS</div>
+              <div class="status-value">Trinity Engine: Active</div>
+            </div>
+            <div class="ai-orb"></div>
+          </div>
+        </div>
+
+        <div class="apps-grid" id="apps-container"></div>
+      </section>
+
+      <!-- STACK VIEW -->
+      <section id="view-stack" class="view hidden">
+        <header class="vision-header">
+          <div class="vision-brand">PROCESS<span>STACK</span></div>
+          <button id="killAllBtn" class="btn-danger">KILL ALL</button>
+        </header>
+        <div id="stack-container">
+          <div class="empty-stack">
+            <i class="fa-solid fa-layer-group"></i>
+            <p>Nenhum processo no monólito.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- LOGS VIEW -->
+      <section id="view-logs" class="view hidden">
+        <header class="vision-header">
+          <div class="vision-brand">SYSTEM<span>LOGS</span></div>
+        </header>
+        <div id="terminal" class="terminal">
+          <div>[00:00:01] Initializing Monolith Kernel...</div>
+          <div>[00:00:02] Dual Trinity V5 Protocol engaged.</div>
+          <div>[00:00:03] Node: Sorocaba/SP connected.</div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- DOCK -->
+    <div id="dock"></div>
+
+    <!-- NAVIGATION -->
+    <nav class="nav-bar">
+      <div class="nav-item active" data-view="home">
+        <i class="fa-solid fa-grip"></i>
+        <span>HOME</span>
+      </div>
+      <div class="nav-item" data-view="stack">
+        <i class="fa-solid fa-ghost"></i>
+        <span>STACK</span>
+      </div>
+      <div class="nav-item" data-view="logs">
+        <i class="fa-solid fa-terminal"></i>
+        <span>LOGS</span>
+      </div>
+    </nav>
+  </div>
+
+  <!-- App JS (modular) -->
+  <script src="https://kodux78k.github.io/oiDual-FSF/js/m0d/oiFSFb.js"></script>
+  <script src="https://kodux78k.github.io/oiDual--Y-/js/oiFS.js"></script>
+  <script src="https://kodux78k.github.io/oiDual--Y-/js/oiFSm.js"></script>
+
+
+
+  <!-- If you still need your external scripts, load them AFTER app.js:
+  <script src="https://kodux78k.github.io/oiDual--Y-/js/oiFS.js"></script>
+  <script src="https://kodux78k.github.io/oiDual--Y-/js/oiFSm.js"></script>
+  -->
+</body>
+</html>
